@@ -41,13 +41,13 @@
 | Contract | estimate/task/status/download、403/409/422、expiresAt |
 | Integration | 同查询、百万行阻断、幂等复用、失效终止、24h 清理 |
 | Golden | CSV 列、行数、空值、浮点、BOM、时间和 checksum |
-| E2E | 五维导出、另一个工程师 403、归档项目只读导出 |
+| E2E | 五维导出、跨 owner 与不存在导出单项均 404、列表 200 filtered、scope 内已定位但角色不足的写操作 403、归档项目只读导出 |
 | Deployment | 空库/seed 启动、重启、备份恢复、日志和 health |
 | Performance | 30 区域硬门禁；300 区域记录环境、耗时、存储和内存 |
 
 ## 演示脚本
 
-按 LDI 工艺导出历史逐时 CSV，核对 estimate、任务进度、golden/checksum 和 24 小时过期；另一个工程师下载返回 403；启动三个演示项目；在干净环境部署、重启和恢复；执行 PRD 六个既有验收剧本，并执行验收剧本 7：首轮产品/地理确认后自动原子创建气象任务，2 秒内对话工具卡与全局任务坞显示同一 task id，验证六阶段进度、失败恢复、刷新恢复、UTC 数据和旧 revision 防覆盖。
+按 LDI 工艺导出历史逐时 CSV，核对 estimate、任务进度、golden/checksum 和 24 小时过期；另一个工程师分别下载跨 owner 的已存在导出与随机不存在导出，两者返回不可区分的 404，导出列表返回 200 filtered；对 scope 内已定位但角色缺少写权限的操作返回 403；启动三个演示项目；在干净环境部署、重启和恢复；执行 PRD 六个既有验收剧本，并执行验收剧本 7：首轮产品/地理确认后自动原子创建气象任务，2 秒内对话工具卡与全局任务坞显示同一 task id，验证六阶段进度、失败恢复、刷新恢复、UTC 数据和旧 revision 防覆盖。
 
 ## 质量门禁与 Definition of Done
 

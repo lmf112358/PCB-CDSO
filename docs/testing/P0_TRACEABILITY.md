@@ -9,7 +9,7 @@
 | P0 ID | 需求摘要 | Primary Milestone | 必须在阶段前批准的 Feature Spec | 最低自动化/验收证据 |
 |---|---|---|---|---|
 | P0_01 | Docker/MySQL/Redis/前后端/迁移 | M0 | `docs/specs/m0/repository-runtime-baseline.md` | 空库启动、迁移/重启、health、build、CI |
-| P0_02 | 两角色认证、归属、账号维护 | M1 | `docs/specs/m1/identity-and-ownership.md` | 登录/停用/转交、跨 Owner 403、审计 |
+| P0_02 | 两角色认证、归属、账号维护 | M1 | `docs/specs/m1/identity-and-ownership.md` | 登录/停用/转交、跨 Owner 与不存在单项均 404、列表 200 filtered、scope 内已定位但角色不足的写操作 403、审计 |
 | P0_03 | 三模板和不可变快照 | M1 | `docs/specs/m1/template-lifecycle.md` | 发布事务、缺引用失败、已发布不可变 |
 | P0_04 | 类 Codex 连续对话、8 阶段和影响分析 | M2 | `docs/specs/m2/expert-conversation-workspace.md` | 消息流、Composer、确认卡/工具卡、恢复、409/422 |
 | P0_05 | 空间层级、唯一工序、覆盖门禁 | M2 | `docs/specs/m2/space-process-binding.md` | 主工序遗漏、唯一绑定、面积 3%、300 区域 |

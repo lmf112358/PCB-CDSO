@@ -193,7 +193,7 @@ Failure: any transaction write failure rolls back all four records
 | P0_07 dependency | project + outbox + task atomicity | one commit or zero rows |
 | P0_07 dependency | duplicate idempotency key | same project id and task id |
 | P0_07 dependency | dispatcher unavailable | task remains DISPATCH_PENDING and is retryable |
-| P0_02 | cross-owner project/task access | 403 without existence leak |
+| P0_02 | cross-owner and nonexistent project/task item access | indistinguishable 404; list 200 filtered; 403 only for a write on a scoped resource when the role is insufficient |
 ```
 
 - [ ] **Step 3: 验证规格无占位符并提交**
