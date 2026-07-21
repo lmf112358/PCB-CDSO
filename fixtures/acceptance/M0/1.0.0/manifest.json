@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0.0",
+  "datasetId": "m0-runtime-baseline",
+  "datasetVersion": "1.0.0",
+  "verificationStatus": "SOFTWARE_VERIFIED",
+  "governance": {
+    "producer": "Codex Implementer",
+    "softwareVerifier": "Automated M0 Gate",
+    "expertApprover": null
+  },
+  "verificationEvidence": [
+    {
+      "status": "SOFTWARE_VERIFIED",
+      "verifiedBy": "Automated M0 Gate",
+      "verifiedAt": "2026-07-21T16:51:00+08:00",
+      "method": "Empty-volume Compose, deterministic tests, runtime probes, negative dependency test and Chromium E2E",
+      "signedRecordPath": "docs/testing/acceptance/M0-acceptance.md"
+    }
+  ],
+  "files": [
+    {
+      "path": "runtime-baseline.json",
+      "sha256": "4dd62797663fd01cd0c986e9d004540308e46b1fc245526821224e83799c7e0b",
+      "mediaType": "application/json"
+    }
+  ],
+  "expectations": {
+    "adminCount": 1,
+    "bootstrapAuditCount": 1,
+    "readyWhenDependenciesHealthy": 200,
+    "readyWhenRedisUnavailable": 503,
+    "liveWhenRedisUnavailable": 200
+  }
+}

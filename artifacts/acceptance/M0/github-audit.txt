@@ -1,0 +1,18 @@
+M0 GitHub repository audit
+Audited: 2026-07-21 Asia/Shanghai
+Repository: https://github.com/lmf112358/PCB-CDSO
+Remote branch: feat/001-m0-foundation
+Evidence commit: 2e76412
+
+GitHub public API GET /repos/lmf112358/PCB-CDSO/branches/main
+Result: protected=false
+
+GitHub public API GET /repos/lmf112358/PCB-CDSO/commits/2e76412/status
+Result: combined status=pending, status contexts=0
+
+GitHub repository UI:
+- feat/001-m0-foundation is present remotely.
+- open pull requests: 0.
+- Actions page currently shows only the initial main-branch Governance run.
+
+Conclusion: local software gates pass, but M0 cannot be marked GO until main branch protection is enabled and a PR runs the required Governance and Build checks successfully.

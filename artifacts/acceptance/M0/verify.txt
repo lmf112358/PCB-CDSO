@@ -1,0 +1,26 @@
+M0 candidate environment and full-gate evidence
+Candidate SHA: 3591987a59040dcc12a42b73a2a20640151de1f8
+Executed: 2026-07-21 Asia/Shanghai
+
+Environment:
+- OS: Microsoft Windows 11 Education 10.0.26200, 64-bit
+- CPU: 13th Gen Intel Core i7-13700
+- RAM: 33955528704 bytes
+- Timezone: China Standard Time
+- Host Python: 3.13.12 (application container and CI runtime: Python 3.12.11)
+- Host Node: 24.14.1 (application container and CI runtime: Node 22.17.0)
+- npm: 11.11.0
+- Docker: 26.1.1
+- Docker Compose: 2.27.0-desktop.2
+
+Lock hashes:
+- package-lock.json: d02152881d0ce037a69a8c3c1224a2e4106fab957facc6938b3b8182a5afaeb3
+- services/api/requirements.lock: 71fbd951f7a053c6f7cc47699913ef78e1d4c143da674854d7a93fdb815bf679
+
+Images:
+- mysql:8.4.5 image sha256:a0f6c7786c75739bd76a37b4b85e0f47b7c5d5a17a094bdd522412fb464d5cbe; repo digest sha256:679e7e924f38a3cbb62a3d7df32924b83f7321a602d3f9f967c01b3df18495d6
+- redis:7.4.3-alpine image sha256:9a07b03a187109922388a4ec71fb5db4bc76b301504243ad9d69398e392599d8; repo digest sha256:f773b35a95e170d92dd4214a3ec4859b1b7960bf56896ae687646d695f311187
+- pcb-cdso-api:0.6.0 sha256:13391c5ecf41680fa2b128e157634483c0b65e3eb204cf43293217c1639be4d6
+- pcb-cdso-web:0.6.0 sha256:90680c78baaffb6d4e618dfca0c1fd2e13fa258aa86b202ec7b2bc0702876ee2
+
+Full deterministic gate result: exit 0.

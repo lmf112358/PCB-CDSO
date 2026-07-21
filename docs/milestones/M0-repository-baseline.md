@@ -1,62 +1,25 @@
-# M0 仓库与契约基线
+# M0 仓库与运行基础
 
 | 属性 | 值 |
 |---|---|
-| 状态 | approved |
+| 状态 | implementing |
 | Owner | Platform / Orchestrator |
-| 时间盒 | 0.5 天目标；门禁不过不进入 M1 |
-| PRD 追踪 | P0_01；P0_14 基线；第六、十、十一章 |
+| PRD 追踪 | P0_01；P0_14 基线 |
 
-## 目标
+## 目标与范围
 
-从全新环境可重复建立仓库、运行治理/测试/构建命令，并冻结后续并行开发需要的技术栈和机器契约边界。
+从空环境可重复建立 Web、API、MySQL、Redis、Celery Worker、迁移和管理员引导，并冻结 M1-M6 共同依赖的机器契约。M0 不包含业务页面、真实冷量公式、模板编辑器或气象 Provider。
 
-## 范围
+## 已交付
 
-包含：GitHub 保护、CI、统一命令、目录骨架、环境变量规范、Docker Compose 骨架、数据库迁移骨架、OpenAPI/错误体/任务状态/schema/seed 骨架、日志关联 ID、首个管理员注入方案。
+- React/Vite 中英文、明暗主题桌面登录壳；M0 登录明确禁用。
+- FastAPI live/ready、稳定错误体、Request ID 与 OpenAPI。
+- SQLAlchemy/Alembic MySQL 基线和幂等 ADMIN 初始化。
+- Redis/Celery 真实 Worker 与任务幂等基础。
+- Docker Compose 七服务编排、非 root 应用容器和健康检查。
+- JSON Schema、锁文件、统一质量命令和 GitHub Actions。
+- 空卷、重启、浏览器、Redis 故障和真实 Worker 验收证据。
 
-不包含：业务页面、真实静态公式、完整模板编辑器、气象 Provider。
+## 质量结论
 
-## Definition of Ready
-
-- [ ] PRD、治理设计、SOP、AGENTS 已合并。
-- [ ] GitHub 仓库 Owner 和 CODEOWNERS 团队已确定。
-- [ ] 开发机可运行 Git、Python、Node 和 Docker；具体版本由本阶段 ADR 冻结。
-- [ ] 技术 ADR 评审人已分配。
-
-## 交付物
-
-- ADR：前端栈、API/认证、异步任务、MySQL 逐时存储、测试工具。
-- `apps/web`、`services/api`、共享 contracts、infra 目录骨架。
-- 一条命令启动依赖和空应用；一条命令执行 verify。
-- OpenAPI 最小错误体、任务状态、revision/幂等操作基线。
-- `.env.example`，首个管理员通过一次性环境变量创建，明文不入日志/数据库。
-- GitHub Actions 和 main 分支保护清单。
-
-## 测试与质量门禁
-
-| 检查 | 通过条件 |
-|---|---|
-| 空库启动 | 删除本地 volume 后按 README 启动成功 |
-| 迁移 | upgrade 到 head、空库重跑幂等、rollback 策略有证据 |
-| 治理 | checker 和测试通过，无未完成标记/非法 JSON |
-| API | health 和 OpenAPI 可访问；错误体契约测试通过 |
-| Web | 登录壳可加载，无控制台阻断错误 |
-| Secrets | 仓库和日志无凭据，GitHub secret scan 开启 |
-| CI | PR 上治理、单元和构建检查必需且不可跳过 |
-
-## 演示脚本
-
-在干净机器克隆仓库，复制 `.env.example`，注入一次性管理员变量，启动服务；显示 migration、health、Web 登录壳和 CI 绿色结果；停止并再次启动，状态一致。
-
-## Definition of Done
-
-- [ ] 所有 ADR 为 approved。
-- [ ] README 命令在 Windows 和 CI/Linux 有等价路径。
-- [ ] OpenAPI/Schema 可被机器解析并生成共享类型。
-- [ ] 空库和重启证据进入 Acceptance Record。
-- [ ] M1 依赖版本已锁定。
-
-## 停止条件
-
-若认证、任务队列或 MySQL 存储 ADR 未批准，或干净环境不能启动，M1 不得开始。worktree 字节异常按 SOP 降级并记录环境风险。
+候选提交 `3591987a59040dcc12a42b73a2a20640151de1f8` 已通过本地软件门禁，证据位于 `artifacts/acceptance/M0/`。GitHub 审计仍显示 `main protected=false` 且候选分支无 PR/CI 状态。启用分支保护、PR 必需检查全部通过并由产品方签认 `docs/testing/acceptance/M0-acceptance.md` 后，才能将状态更新为 `verified` 并进入 M1。

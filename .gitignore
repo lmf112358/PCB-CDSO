@@ -1,3 +1,4 @@
+doc/
 .worktrees/
 .env
 .env.*
@@ -15,6 +16,9 @@ dist/
 build/
 .vite/
 *.log
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
 *.sqlite
 *.db
 exports/

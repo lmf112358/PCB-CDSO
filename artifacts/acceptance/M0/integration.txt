@@ -1,0 +1,17 @@
+M0 MySQL, bootstrap and Celery evidence
+Candidate SHA: 3591987a59040dcc12a42b73a2a20640151de1f8
+Executed: 2026-07-21 Asia/Shanghai
+
+Empty-volume startup:
+- MySQL 8.4.5 reached healthy.
+- Alembic migration 0001_users_audit exited 0.
+- bootstrap-admin exited 0.
+- Re-running migrate and bootstrap-admin exited 0.
+- users row count after repeated bootstrap: 1 ADMIN.
+- audit_events row count after repeated bootstrap: 1 admin.bootstrap.created event.
+- Unit integration test verifies the stored password is Argon2 and plaintext is absent.
+
+Real Celery/Redis smoke:
+Input correlation: m0-runtime-correlation
+Worker result: {'status': 'ok', 'request_id': 'm0-runtime-correlation'}
+Result received before 30-second timeout. Exit 0.

@@ -1,0 +1,16 @@
+M0 Web evidence
+Candidate SHA: 3591987a59040dcc12a42b73a2a20640151de1f8
+Executed: 2026-07-21 Asia/Shanghai
+
+npm run test --workspace @pcb-cdso/web -- --run
+Result: 3 tests passed. Exit 0.
+
+npm run typecheck
+Result: TypeScript project check passed. Exit 0.
+
+npm run build
+Result: production build passed; index JS 563.47 kB, gzip 186.00 kB. Exit 0.
+Performance note: business routes and ECharts must be lazy-loaded in later milestones to keep them out of the login first-load path.
+
+npm run e2e
+Result: desktop Chromium login shell scenario passed at 1440x900. Chinese/English switch, disabled M0 login and dark theme verified. Exit 0.

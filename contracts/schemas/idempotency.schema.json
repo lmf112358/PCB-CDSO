@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pcb-cdso.local/schemas/idempotency.schema.json",
+  "title": "PCB-CDSO Idempotency Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["idempotencyKey", "scope"],
+  "properties": {
+    "idempotencyKey": {"type": "string", "minLength": 8, "maxLength": 128},
+    "scope": {"type": "string", "minLength": 1, "maxLength": 128}
+  }
+}

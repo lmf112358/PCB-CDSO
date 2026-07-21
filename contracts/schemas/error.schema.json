@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pcb-cdso.local/schemas/error.schema.json",
+  "title": "PCB-CDSO API Error",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["code", "message_key", "field_path", "details", "request_id"],
+  "properties": {
+    "code": {
+      "type": "string",
+      "enum": ["FORBIDDEN", "REVISION_CONFLICT", "VALIDATION_FAILED", "DEPENDENCY_UNAVAILABLE", "INTERNAL_ERROR"]
+    },
+    "message_key": {"type": "string", "minLength": 1},
+    "field_path": {"type": ["string", "null"]},
+    "details": {"type": "object"},
+    "request_id": {"type": "string", "minLength": 16, "maxLength": 64}
+  }
+}

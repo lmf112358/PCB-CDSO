@@ -1,0 +1,17 @@
+M0 API quality evidence
+Candidate SHA: 3591987a59040dcc12a42b73a2a20640151de1f8
+Executed: 2026-07-21 Asia/Shanghai
+
+cd services/api && python -m pytest -q
+Result: 14 passed in 1.25s. Exit 0.
+
+python -m ruff check src tests
+Result: All checks passed. Exit 0.
+
+python -m mypy src
+Result: Success, no issues found in 18 source files. Exit 0.
+
+Runtime API probes after restart:
+- GET /health/live: HTTP 200
+- GET /health/ready: HTTP 200, database=ready, redis=ready
+- GET /openapi.json: HTTP 200 and valid JSON
