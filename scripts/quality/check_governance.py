@@ -58,7 +58,18 @@ def relative(path: Path, root: Path) -> str:
 
 def text_files(root: Path) -> list[Path]:
     files: list[Path] = []
-    for path in root.rglob("*"):
+    if (root / ".git").exists():
+        listed = subprocess.run(
+            ["git", "ls-files", "-co", "--exclude-standard"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        candidates = (root / item for item in listed.stdout.splitlines() if item)
+    else:
+        candidates = root.rglob("*")
+    for path in candidates:
         if not path.is_file() or ".git" in path.parts:
             continue
         if path.suffix.lower() in TEXT_SUFFIXES or path.name in {"AGENTS.md", "CLAUDE.md", "README.md"}:
