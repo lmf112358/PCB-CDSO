@@ -1,5 +1,6 @@
 FROM node:22.17.0-bookworm-slim AS build
 WORKDIR /app
+RUN npm install --global npm@11.11.0
 COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/package.json
 RUN npm ci --ignore-scripts
