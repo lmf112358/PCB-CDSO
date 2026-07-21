@@ -1,0 +1,37 @@
+:root { font-family: Inter, "Noto Sans SC", system-ui, sans-serif; color: #102a36; background: #edf4f3; font-synthesis: none; }
+:root[data-theme='dark'] { color: #e6f1f2; background: #06151c; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 1080px; min-height: 100vh; }
+button, input { font: inherit; }
+.page-shell { position: relative; min-height: 100vh; overflow: hidden; padding: 0 clamp(48px, 6vw, 112px); background: linear-gradient(135deg, rgba(7,35,46,.03), transparent 45%), repeating-linear-gradient(90deg, transparent 0 79px, rgba(16,90,94,.035) 80px); }
+:root[data-theme='dark'] .page-shell { background: linear-gradient(135deg, rgba(18,165,148,.1), transparent 44%), repeating-linear-gradient(90deg, transparent 0 79px, rgba(130,220,207,.035) 80px); }
+.ambient { position: absolute; border-radius: 50%; filter: blur(2px); pointer-events: none; }
+.ambient-one { width: 420px; height: 420px; right: -100px; top: -150px; background: radial-gradient(circle, rgba(18,165,148,.2), transparent 68%); }
+.ambient-two { width: 360px; height: 360px; left: 30%; bottom: -240px; background: radial-gradient(circle, rgba(237,173,54,.14), transparent 68%); }
+.topbar { position: relative; z-index: 1; height: 96px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(38,92,100,.14); }
+.brand { display: inline-flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; letter-spacing: .08em; font-size: 18px; }
+.brand-mark { display: grid; place-items: center; width: 38px; height: 38px; color: white; border-radius: 11px; background: #0b8f82; box-shadow: 0 8px 24px rgba(11,143,130,.22); }
+.toolbar { display: flex; gap: 8px; }
+.content-grid { position: relative; z-index: 1; min-height: calc(100vh - 156px); display: grid; grid-template-columns: minmax(560px, 1.25fr) minmax(390px, .75fr); align-items: center; gap: clamp(64px, 9vw, 150px); padding: 58px 0 72px; }
+.product-story { max-width: 780px; }
+.version-tag { margin: 0 0 24px; padding: 7px 12px; color: #087f75; background: rgba(18,165,148,.1); font-weight: 650; letter-spacing: .08em; }
+.product-story h1 { max-width: 760px; margin: 0; font-size: clamp(44px, 4.5vw, 72px); line-height: 1.08; letter-spacing: -.045em; font-weight: 720; }
+.lead { max-width: 670px; margin: 28px 0 44px; color: #526d76; font-size: 18px; line-height: 1.75; }
+:root[data-theme='dark'] .lead, :root[data-theme='dark'] .signal p, :root[data-theme='dark'] .card-intro, :root[data-theme='dark'] footer { color: #91a9af; }
+.signal-list { display: grid; gap: 17px; }
+.signal { display: flex; gap: 18px; align-items: flex-start; }
+.signal-index { color: #0b9286; font-family: ui-monospace, monospace; font-size: 13px; font-weight: 700; padding-top: 4px; }
+.signal h2 { margin: 0 0 5px; font-size: 16px; letter-spacing: .01em; }
+.signal p { margin: 0; color: #647c84; font-size: 14px; line-height: 1.5; }
+.login-card { padding: 42px; border: 1px solid rgba(30,91,98,.14); border-radius: 20px; background: rgba(255,255,255,.82); box-shadow: 0 24px 80px rgba(15,62,69,.12); backdrop-filter: blur(20px); }
+:root[data-theme='dark'] .login-card { background: rgba(9,29,38,.82); border-color: rgba(114,198,190,.15); box-shadow: 0 24px 80px rgba(0,0,0,.28); }
+.status { display: flex; align-items: center; gap: 8px; color: #447069; font-size: 12px; font-weight: 650; letter-spacing: .04em; }
+.status span { width: 7px; height: 7px; border-radius: 50%; background: #15ae82; box-shadow: 0 0 0 5px rgba(21,174,130,.1); }
+.login-card h2 { margin: 25px 0 7px; font-size: 29px; letter-spacing: -.02em; }
+.card-intro { margin: 0 0 31px; color: #6b8087; font-size: 14px; }
+.login-card .ant-form-item { margin-bottom: 20px; }
+.login-card .ant-form-item-label > label { font-weight: 620; }
+.login-card .ant-input-affix-wrapper { min-height: 48px; }
+.pending-note { margin: 16px 0 0; color: #7b8e94; text-align: center; font-size: 12px; }
+footer { position: absolute; bottom: 24px; color: #83979c; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+@media (max-width: 1180px) { .content-grid { gap: 48px; grid-template-columns: 1.15fr .85fr; } .product-story h1 { font-size: 48px; } }
