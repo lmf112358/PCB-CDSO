@@ -289,7 +289,7 @@ PR 必须：
 1. Spec Review：验收条件、状态机、权限、失败路径、契约和范围是否一致。
 2. Code Quality Review：实现、测试设计、可维护性、安全、性能和可观察性。
 
-同一 Reviewer 可连续完成两阶段，但必须分别给出结论。Implementer 不能独自批准自己的 PR。
+Spec Reviewer、Code Quality Reviewer 与 Implementer 必须是三个独立执行身份，并分别在当前 PR Head SHA 上签署结论。
 
 ### Step 10：合并与回收
 

@@ -4,7 +4,9 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import subprocess
 import sys
+from pathlib import Path
 
 
 SHA_PATTERN = re.compile(r"^[a-f0-9]{40}$", re.IGNORECASE)
@@ -28,7 +30,7 @@ def field(text: str, label: str) -> str:
     return match.group(1).strip() if match else ""
 
 
-def check_pr_body(body: str) -> list[str]:
+def check_pr_body(body: str, expected_head_sha: str | None = None) -> list[str]:
     errors: list[str] = []
     handoff = section(body, "Agent Handoff")
     spec_review = section(body, "Spec Review")
@@ -53,6 +55,8 @@ def check_pr_body(body: str) -> list[str]:
             reviewers.append(reviewer.casefold())
         if not SHA_PATTERN.fullmatch(reviewed_sha):
             errors.append(f"{label} requires a 40-character Reviewed SHA")
+        elif expected_head_sha and reviewed_sha.lower() != expected_head_sha.lower():
+            errors.append(f"{label} Reviewed SHA must equal the current PR head")
         if conclusion != "APPROVE":
             errors.append(f"{label} conclusion must be APPROVE")
 
@@ -68,21 +72,43 @@ def check_pr_body(body: str) -> list[str]:
         record_path = field(acceptance, "Acceptance Record path")
         if not SHA_PATTERN.fullmatch(candidate):
             errors.append("Candidate SHA must be a 40-character commit SHA")
+        elif expected_head_sha and candidate.lower() != expected_head_sha.lower():
+            errors.append("Candidate SHA must equal the current PR head")
         if not record_path:
             errors.append("Acceptance Record path is required for a milestone candidate")
+        elif not re.fullmatch(r"docs/testing/acceptance/M[0-6]-acceptance\.md", record_path):
+            errors.append("Acceptance Record path must use the standard milestone path")
     return errors
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate required PR body governance evidence.")
     parser.add_argument("--body-env", default="PR_BODY", help="Environment variable containing PR body")
+    parser.add_argument("--head-sha-env", default="PR_HEAD_SHA", help="Environment variable containing PR head SHA")
+    parser.add_argument("--validate-acceptance-root", type=Path, help="Run milestone acceptance validation in this repository")
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     body = os.environ.get(args.body_env, "")
-    errors = check_pr_body(body)
+    head_sha = os.environ.get(args.head_sha_env, "")
+    errors = check_pr_body(body, expected_head_sha=head_sha or None)
+    acceptance = section(body, "Acceptance")
+    acceptance_status = field(acceptance, "状态")
+    record_path = field(acceptance, "Acceptance Record path")
+    record_match = re.fullmatch(r"docs/testing/acceptance/(M[0-6])-acceptance\.md", record_path)
+    if args.validate_acceptance_root and acceptance_status != "not-required" and record_match and not errors:
+        milestone = record_match.group(1)
+        checker = Path(__file__).with_name("check_governance.py")
+        result = subprocess.run(
+            [sys.executable, str(checker), "--root", str(args.validate_acceptance_root), "--acceptance-ready", milestone],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            errors.append(f"{milestone} acceptance-ready failed: {result.stdout.strip() or result.stderr.strip()}")
     if errors:
         print(f"PR governance check failed with {len(errors)} issue(s):")
         for error in errors:

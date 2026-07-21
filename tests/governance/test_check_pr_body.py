@@ -48,11 +48,24 @@ class PullRequestBodyTest(unittest.TestCase):
         errors = check_pr_body(body)
         self.assertTrue(any("independent" in error for error in errors))
 
+    def test_reviewed_sha_must_equal_pr_head(self) -> None:
+        errors = check_pr_body(VALID_BODY, expected_head_sha="c" * 40)
+        self.assertTrue(any("current PR head" in error for error in errors))
+
     def test_candidate_acceptance_requires_go_record(self) -> None:
         body = VALID_BODY.replace("- 状态：not-required", "- 状态：GO")
         errors = check_pr_body(body)
         self.assertTrue(any("Acceptance Record path" in error for error in errors))
         self.assertTrue(any("Candidate SHA" in error for error in errors))
+
+    def test_candidate_record_path_must_use_standard_milestone_path(self) -> None:
+        body = (
+            VALID_BODY.replace("- 状态：not-required", "- 状态：GO")
+            .replace("- Candidate SHA / Tag：", f"- Candidate SHA / Tag：{'b' * 40}")
+            .replace("- Acceptance Record path：", "- Acceptance Record path：docs/random.md")
+        )
+        errors = check_pr_body(body)
+        self.assertTrue(any("standard milestone path" in error for error in errors))
 
 
 if __name__ == "__main__":
