@@ -44,6 +44,24 @@ def write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def parse_traceability_rows(text: str) -> dict[str, list[str]]:
+    rows: dict[str, list[str]] = {}
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        cells = [cell.strip().replace("`", "") for cell in stripped.strip("|").split("|")]
+        p0_id = cells[0] if cells else ""
+        if not (len(p0_id) == 5 and p0_id.startswith("P0_") and p0_id[3:].isdigit()):
+            continue
+        if len(cells) != 5:
+            raise ValueError(f"malformed traceability row for {p0_id}")
+        if p0_id in rows:
+            raise ValueError(f"duplicate {p0_id}")
+        rows[p0_id] = cells
+    return rows
+
+
 def make_valid_repository(root: Path, include_milestones: bool = True) -> None:
     p0_lines = "\n".join(f"- P0_{index:02d}" for index in range(1, 15))
     primary_milestones = ("M0", "M1", "M1", "M2", "M2", "M2", "M4", "M3", "M4", "M5", "M5", "M5", "M1", "M6")
@@ -200,6 +218,49 @@ class GovernanceCheckerTest(unittest.TestCase):
             result = run_checker(root)
             self.assertEqual(1, result.returncode)
             self.assertIn("P0_14", result.stdout)
+
+    def test_rebaseline_terms_are_traceable(self) -> None:
+        prd = (PROJECT_ROOT / "docs/product/PRD_v0.6.md").read_text(encoding="utf-8")
+        traceability = (PROJECT_ROOT / "docs/testing/P0_TRACEABILITY.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("类 Codex 连续对话", prd)
+        self.assertIn("首轮产品/地理确认后自动启动", prd)
+        rows = parse_traceability_rows(traceability)
+        self.assert_rebaseline_rows(rows)
+
+    def test_rebaseline_traceability_rejects_swapped_rows(self) -> None:
+        traceability = """\
+| P0_04 | weather | M4 | docs/specs/m1/project-weather-dispatch.md；docs/specs/m4/weather-ingestion.md | evidence |
+| P0_07 | conversation | M2 | docs/specs/m2/expert-conversation-workspace.md | evidence |
+"""
+        with self.assertRaises(AssertionError):
+            self.assert_rebaseline_rows(parse_traceability_rows(traceability))
+
+    def test_rebaseline_traceability_rejects_p0_07_wrong_primary(self) -> None:
+        traceability = """\
+| P0_04 | conversation | M2 | docs/specs/m2/expert-conversation-workspace.md | evidence |
+| P0_07 | weather | M1 | docs/specs/m1/project-weather-dispatch.md；docs/specs/m4/weather-ingestion.md | evidence |
+"""
+        with self.assertRaises(AssertionError):
+            self.assert_rebaseline_rows(parse_traceability_rows(traceability))
+
+    def test_parse_traceability_rows_rejects_duplicate_p0_07(self) -> None:
+        traceability = """\
+| P0_07 | weather | M4 | docs/specs/m1/project-weather-dispatch.md；docs/specs/m4/weather-ingestion.md | evidence |
+| P0_07 | duplicate | M4 | docs/specs/m4/weather-ingestion.md | evidence |
+"""
+        with self.assertRaisesRegex(ValueError, "duplicate P0_07"):
+            parse_traceability_rows(traceability)
+
+    def assert_rebaseline_rows(self, rows: dict[str, list[str]]) -> None:
+        self.assertEqual("M2", rows["P0_04"][2])
+        self.assertEqual(
+            "docs/specs/m2/expert-conversation-workspace.md", rows["P0_04"][3]
+        )
+        self.assertEqual("M4", rows["P0_07"][2])
+        self.assertIn("docs/specs/m1/project-weather-dispatch.md", rows["P0_07"][3])
+        self.assertIn("docs/specs/m4/weather-ingestion.md", rows["P0_07"][3])
 
     def test_acceptance_ready_requires_m6_milestone_spec(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
