@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from redis import Redis
 
 from pcb_cdso.core.config import Settings, get_settings
+from pcb_cdso.db.session import build_engine, probe_database
 from pcb_cdso.http.errors import ApiError, api_error_handler, unexpected_error_handler
 from pcb_cdso.http.health import build_health_router
 from pcb_cdso.http.request_id import RequestIdMiddleware
@@ -33,6 +34,8 @@ def create_app(
     task_dispatcher: TaskDispatcher | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
+    engine = build_engine(resolved_settings)
+    redis_client = Redis.from_url(resolved_settings.redis_url)
     app = FastAPI(
         title="PCB-CDSO API",
         version=resolved_settings.version,
@@ -44,13 +47,13 @@ def create_app(
     app.include_router(
         build_health_router(
             resolved_settings,
-            db_probe or (lambda: False),
-            redis_probe or (lambda: False),
+            db_probe or (lambda: probe_database(engine)),
+            redis_probe or (lambda: bool(redis_client.ping())),
         )
     )
     if resolved_settings.environment != "production":
         resolved_store = idempotency_store or RedisIdempotencyStore(
-            Redis.from_url(resolved_settings.redis_url)
+            redis_client
         )
         app.include_router(build_task_router(resolved_store, task_dispatcher or dispatch_smoke))
     return app

@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.worktrees
+node_modules
+**/node_modules
+dist
+**/dist
+__pycache__
+**/__pycache__
+.pytest_cache
+artifacts
+exports
+*.sqlite
+*.db

@@ -1,0 +1,113 @@
+name: pcb-cdso
+
+x-api-environment: &api-environment
+  PCB_CDSO_ENVIRONMENT: ${PCB_CDSO_ENVIRONMENT:-development}
+  PCB_CDSO_DATABASE_URL: mysql+pymysql://${MYSQL_USER:-pcb_cdso}:${MYSQL_PASSWORD:-local_only_replace_me}@mysql:3306/${MYSQL_DATABASE:-pcb_cdso}
+  PCB_CDSO_REDIS_URL: redis://redis:6379/0
+
+x-api-image: &api-image
+  build:
+    context: .
+    dockerfile: infra/docker/api.Dockerfile
+  image: pcb-cdso-api:0.6.0
+
+services:
+  mysql:
+    image: mysql:8.4.5
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pcb_cdso}
+      MYSQL_USER: ${MYSQL_USER:-pcb_cdso}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local_only_replace_me}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local_root_replace_me}
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4.3-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    <<: *api-image
+    environment: *api-environment
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: "no"
+
+  bootstrap-admin:
+    <<: *api-image
+    environment:
+      <<: *api-environment
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@example.local}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-LocalOnly-Replace-This-123!}
+    command: ["python", "-m", "pcb_cdso.bootstrap"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  api:
+    <<: *api-image
+    environment: *api-environment
+    ports:
+      - "8000:8000"
+    depends_on:
+      bootstrap-admin:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  worker:
+    <<: *api-image
+    environment: *api-environment
+    command: ["celery", "-A", "pcb_cdso.tasks.celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=2"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+    image: pcb-cdso-web:0.6.0
+    ports:
+      - "3000:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:

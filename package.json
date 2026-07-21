@@ -9,9 +9,13 @@
     "node": ">=22.12 <23",
     "npm": ">=11 <12"
   },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  },
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "e2e": "playwright test"
   }
 }
