@@ -5,17 +5,19 @@
 | 状态 | approved |
 | Owner | Domain + Web + QA |
 | 时间盒 | 2 天目标 |
-| PRD 追踪 | P0_04、P0_05、P0_06；3.3、4.1、4.2、5.2、7 |
+| PRD 追踪 | P0_04、P0_05、P0_06；P0_07 dependency（Primary M4）；3.3、4.1、4.2、5.2、7 |
 
 ## 目标
 
-工程师只能通过八阶段问答把可计算、可追溯且通过强校验的数据写入项目，刷新可恢复，并发修改不会互相覆盖。
+工程师在类 Codex 连续消息流中通过八阶段问答，把可计算、可追溯且通过强校验的数据写入项目；Composer、对话和全局任务坞刷新可恢复，并发修改不会互相覆盖。
 
 ## 范围
 
-包含：字段 registry、双语对话配置、结构化确认卡、8 阶段状态机、建筑/楼层/区域、唯一工序绑定、主要工序覆盖、工艺环境、冷量输入、PCW 直输、计划/蓄冷、阻断/警告、影响分析、revision 和结果失效。
+包含：字段 registry、双语对话配置、连续消息流、底部 Composer、`AGENT_PROMPT` / `USER_DRAFT` / `CONFIRMATION_CARD` / `TOOL_CARD` 四类消息卡、8 阶段状态机、建筑/楼层/区域、唯一工序绑定、主要工序覆盖、工艺环境、冷量输入、PCW 直输、计划/蓄冷、阻断/警告、影响分析、revision 和结果失效；工具卡与右下角全局任务坞只镜像持久化 Task，刷新和跨 Tab 后由 `GET /tasks` 恢复。
 
 不包含：自由表单入口、Excel 导入、2D 画布、任意流程 DSL、设备级 PCW 推导。
+
+阶段边界：M1 原子创建气象 Task 并以 fake dispatcher 派发；M2 只提供可复用的工具卡、任务坞和 `GET /tasks` 恢复；真实 Provider、六阶段抓取、CSV 兜底和 current 发布均由 P0_07 Primary M4 负责。
 
 ## Definition of Ready
 
@@ -42,7 +44,7 @@
 | Unit/Property | 字段类型/单位/范围、状态转换、面积容差、工序覆盖 |
 | Contract | impact/confirm、message key、409/422、幂等提交 |
 | Integration | Answer Command 原子写入、审计、revision、失效传播 |
-| E2E | 8 阶段、刷新恢复、修改已完成字段、双 Tab 冲突 |
+| E2E | 连续消息流/Composer/四类卡、8 阶段、`GET /tasks` 驱动任务坞刷新恢复、修改已完成字段、双 Tab 冲突 |
 | i18n | 所有问题/选项/错误有 zh-CN/en-US，缺 key 测试失败 |
 
 ## 演示脚本

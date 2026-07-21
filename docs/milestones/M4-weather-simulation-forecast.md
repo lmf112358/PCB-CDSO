@@ -13,7 +13,7 @@
 
 ## 范围
 
-包含：Provider 接口、标准 CSV 兜底、分阶段进度、UTC 时间轴、天气矩阵双线性插值、生产率线性插值、区域宽表、五维聚合、每小时预测刷新、current/归档/过期。
+包含：真实气象 Provider、标准 CSV 兜底、`LOCATE / REQUEST / DOWNLOAD / CLEAN / VALIDATE / STORE` 六阶段进度、UTC 时间轴、天气矩阵双线性插值、生产率线性插值、区域宽表、五维聚合、每小时预测刷新、current/归档/过期。
 
 不包含：精度承诺、真实生产数据校准、前馈控制、水蓄冷计算。
 
@@ -32,6 +32,7 @@
 - 生产系数分段间线性插值；无计划 productionRate=0；例外日优先。
 - UTC 整点为唯一键；DST 重复本地小时分别计算，跳失小时不补。
 - 旧依赖指纹任务不得覆盖新 current。
+- 城市等地理字段变化必须递增 input revision，使旧气象任务失效或取消并创建新任务；旧任务晚完成时仍不得发布或覆盖新 revision 的 current。
 
 ## 测试矩阵
 
@@ -39,7 +40,7 @@
 |---|---|
 | Unit | CSV 校验、双线性/线性插值、边界、计划优先级 |
 | Property | TOTAL/聚合守恒、PCW 天气系数恒 1、UTC 唯一 |
-| Integration | Celery 幂等、取消/重试、乱序完成、重启恢复、原子切换 |
+| Integration | 真实 Provider、六阶段单调进度、Celery 幂等、城市 revision 失效、取消/重试、乱序完成防覆盖、重启恢复、原子切换 |
 | E2E | CSV 导入进度、三年任务、七天预测、自动/手动刷新 |
 | Performance | 30 区域硬门禁；300 区域记录基线和存储/内存 |
 
