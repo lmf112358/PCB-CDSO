@@ -1,10 +1,12 @@
 import { BulbOutlined, GlobalOutlined, LockOutlined, MailOutlined, MoonOutlined, SunOutlined } from '@ant-design/icons'
-import { Button, ConfigProvider, Form, Input, Tag, theme as antdTheme } from 'antd'
+import { Alert, Button, ConfigProvider, Form, Input, Tag, theme as antdTheme } from 'antd'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ApiError, type ActorContext, getAccessToken, login } from './api'
 import { LOCALE_STORAGE_KEY } from './i18n'
 import { applyTheme, initialTheme, type ThemeMode } from './theme'
+import { Workspace } from './Workspace'
 import './styles.css'
 
 const signals = [
@@ -13,6 +15,11 @@ const signals = [
   ['traceable', 'traceableDetail'],
 ] as const
 
+interface LoginValues {
+  email: string
+  password: string
+}
+
 export function App() {
   const { t, i18n } = useTranslation()
   const [mode, setMode] = useState<ThemeMode>(() => {
@@ -20,6 +27,10 @@ export function App() {
     applyTheme(selected)
     return selected
   })
+  const [actor, setActor] = useState<ActorContext | null>(null)
+  const [signingIn, setSigningIn] = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [form] = Form.useForm<LoginValues>()
 
   const toggleLanguage = async () => {
     const nextLocale = i18n.language === 'en-US' ? 'zh-CN' : 'en-US'
@@ -32,6 +43,51 @@ export function App() {
     const nextMode = mode === 'dark' ? 'light' : 'dark'
     applyTheme(nextMode)
     setMode(nextMode)
+  }
+
+  const handleLogin = async (values: LoginValues) => {
+    setSigningIn(true)
+    setLoginError(null)
+    try {
+      const session = await login(values.email, values.password)
+      setActor({
+        actor_id: session.user.id,
+        role: session.user.role,
+        locale: session.locale,
+        theme: session.theme,
+      })
+    } catch (error) {
+      const msg = error instanceof ApiError ? t('loginFailed') : t('loginFailed')
+      setLoginError(msg)
+    } finally {
+      setSigningIn(false)
+    }
+  }
+
+  // If we already have a token (e.g. page refresh), try to restore the actor.
+  useState(() => {
+    const token = getAccessToken()
+    if (token && !actor) {
+      import('./api')
+        .then(({ getCurrentActor }) => getCurrentActor())
+        .then(setActor)
+        .catch(() => {
+          /* token expired or invalid; stay on login */
+        })
+    }
+  })
+
+  if (actor) {
+    return (
+      <ConfigProvider
+        theme={{
+          algorithm: mode === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+          token: { colorPrimary: '#12a594', borderRadius: 10, fontFamily: 'Inter, "Noto Sans SC", sans-serif' },
+        }}
+      >
+        <Workspace actor={actor} onSignOut={() => setActor(null)} />
+      </ConfigProvider>
+    )
   }
 
   return (
@@ -73,19 +129,26 @@ export function App() {
           </div>
 
           <section className="login-card" aria-labelledby="login-title">
-            <div className="status"><span />{t('foundation')}</div>
+            <div className="status"><span />{t('authEnabled')}</div>
             <h2 id="login-title">{t('signIn')}</h2>
             <p className="card-intro">{t('welcome')}</p>
-            <Form layout="vertical" requiredMark={false}>
-              <Form.Item label={t('email')}>
+            <Form
+              form={form}
+              layout="vertical"
+              requiredMark={false}
+              onFinish={(values) => void handleLogin(values)}
+            >
+              <Form.Item label={t('email')} name="email" rules={[{ required: true, type: 'email' }]}>
                 <Input size="large" prefix={<MailOutlined />} placeholder={t('emailPlaceholder')} aria-label={t('email')} />
               </Form.Item>
-              <Form.Item label={t('password')}>
+              <Form.Item label={t('password')} name="password" rules={[{ required: true }]}>
                 <Input.Password size="large" prefix={<LockOutlined />} placeholder={t('passwordPlaceholder')} aria-label={t('password')} />
               </Form.Item>
-              <Button type="primary" size="large" aria-label={t('login')} block disabled>{t('login')}</Button>
+              {loginError && <Alert type="error" title={loginError} showIcon style={{ marginBottom: 12 }} />}
+              <Button type="primary" size="large" aria-label={t('login')} htmlType="submit" block loading={signingIn}>
+                {signingIn ? t('signingIn') : t('login')}
+              </Button>
             </Form>
-            <p className="pending-note">{t('pending')}</p>
           </section>
         </section>
         <footer>PCB CDSO · Preview 0.6</footer>
