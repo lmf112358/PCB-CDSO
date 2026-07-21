@@ -8,6 +8,7 @@
 | Implementer | Codex |
 | Software Verifier | Automated M0 Gate |
 | Product Sign-off | pending |
+| GitHub Gate | blocked：`main` 未保护，候选分支尚无 PR/CI 状态 |
 
 ## 验收证据
 
@@ -19,7 +20,8 @@
 | P0_01 | MySQL/bootstrap/Worker | 迁移、幂等、真实消费通过 | ADMIN=1、审计=1、任务成功 | `artifacts/acceptance/M0/integration.txt` | pass |
 | P0_01 | Web 登录壳 | 中英/明暗/禁用登录通过 | Vitest 与 Chromium E2E 通过 | `artifacts/acceptance/M0/web-test.txt` | pass |
 | P0_14 | 统一质量门禁 | 确定性门禁退出 0 | 全量候选门禁退出 0 | `artifacts/acceptance/M0/verify.txt` | pass |
+| P0_01 | GitHub 合并治理 | `main` 受保护且 PR 必需检查通过 | `main protected=false`、PR=0、候选状态上下文=0 | `artifacts/acceptance/M0/github-audit.txt` | fail |
 
 ## 软件验收结论
 
-软件证据满足 M0 技术门禁，候选版本可提交产品方签认。产品方签认前，本记录保持 `CANDIDATE`，M0 不标记为 GO，也不进入 M1。
+本地软件证据满足 M0 技术门禁。启用 `main` 分支保护、创建 PR 并取得 GitHub Actions 绿灯后，候选版本方可提交产品签认。上述条件和产品签认完成前，本记录保持 `CANDIDATE`，M0 不标记为 GO，也不进入 M1。

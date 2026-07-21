@@ -22,4 +22,4 @@
 
 ## 质量结论
 
-候选提交 `3591987a59040dcc12a42b73a2a20640151de1f8` 已通过软件门禁，证据位于 `artifacts/acceptance/M0/`。产品方签认 `docs/testing/acceptance/M0-acceptance.md` 后，将状态更新为 `verified` 并进入 M1。
+候选提交 `3591987a59040dcc12a42b73a2a20640151de1f8` 已通过本地软件门禁，证据位于 `artifacts/acceptance/M0/`。GitHub 审计仍显示 `main protected=false` 且候选分支无 PR/CI 状态。启用分支保护、PR 必需检查全部通过并由产品方签认 `docs/testing/acceptance/M0-acceptance.md` 后，才能将状态更新为 `verified` 并进入 M1。
