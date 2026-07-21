@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -23,7 +24,7 @@ def section(body: str, heading: str) -> str:
 
 def field(text: str, label: str) -> str:
     match = re.search(
-        rf"^-[ \t]*{re.escape(label)}[ \t]*[：:][ \t]*([^\r\n]*)$",
+        rf"^-[ \t]*{re.escape(label)}[ \t]*[：:][ \t]*([^\r\n]*)\r?$",
         text,
         re.MULTILINE,
     )
@@ -89,10 +90,31 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def load_pr_context(body_env: str, head_sha_env: str) -> tuple[str, str]:
+    body = os.environ.get(body_env, "")
+    head_sha = os.environ.get(head_sha_env, "")
+    event_path = os.environ.get("GITHUB_EVENT_PATH", "")
+    if not event_path:
+        return body, head_sha
+    try:
+        event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return body, head_sha
+
+    pull_request = event.get("pull_request", {})
+    if not isinstance(pull_request, dict):
+        return body, head_sha
+    event_body = pull_request.get("body")
+    event_head = pull_request.get("head", {})
+    event_sha = event_head.get("sha") if isinstance(event_head, dict) else None
+    return (event_body if isinstance(event_body, str) else body), (
+        event_sha if isinstance(event_sha, str) else head_sha
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    body = os.environ.get(args.body_env, "")
-    head_sha = os.environ.get(args.head_sha_env, "")
+    body, head_sha = load_pr_context(args.body_env, args.head_sha_env)
     errors = check_pr_body(body, expected_head_sha=head_sha or None)
     acceptance = section(body, "Acceptance")
     acceptance_status = field(acceptance, "状态")

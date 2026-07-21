@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import json
+import os
+import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
-from scripts.quality.check_pr_body import check_pr_body
+from scripts.quality.check_pr_body import check_pr_body, load_pr_context
 
 
 VALID_BODY = """
@@ -34,8 +39,33 @@ VALID_BODY = """
 
 
 class PullRequestBodyTest(unittest.TestCase):
+    def test_load_pr_context_falls_back_to_github_event_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            event_path = Path(directory) / "event.json"
+            event_path.write_text(
+                json.dumps(
+                    {
+                        "pull_request": {
+                            "body": VALID_BODY,
+                            "head": {"sha": "b" * 40},
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            environment = {
+                "PR_BODY": "stale environment body",
+                "PR_HEAD_SHA": "a" * 40,
+                "GITHUB_EVENT_PATH": str(event_path),
+            }
+            with patch.dict(os.environ, environment, clear=False):
+                self.assertEqual((VALID_BODY, "b" * 40), load_pr_context("PR_BODY", "PR_HEAD_SHA"))
+
     def test_complete_independent_reviews_pass(self) -> None:
         self.assertEqual([], check_pr_body(VALID_BODY))
+
+    def test_complete_independent_reviews_pass_with_crlf(self) -> None:
+        self.assertEqual([], check_pr_body(VALID_BODY.replace("\n", "\r\n")))
 
     def test_missing_review_identity_and_approval_fail(self) -> None:
         body = VALID_BODY.replace("Alice / Codex", "").replace("- 结论：APPROVE", "- 结论：REQUEST-CHANGES", 1)
