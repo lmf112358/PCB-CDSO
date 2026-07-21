@@ -12,6 +12,19 @@ from pathlib import Path
 
 SHA_PATTERN = re.compile(r"^[a-f0-9]{40}$", re.IGNORECASE)
 
+# SOP Appendix A (DEVELOPMENT_SOP v0.2.0) allows single-developer PRs to merge
+# multiple Tasks and use one person in dual review roles. Triggered by an
+# explicit declaration line in the PR body so the exception is machine-visible.
+APPENDIX_A_PATTERN = re.compile(
+    r"^-[ \t]*SOP Appendix A[ \t]*[：:][ \t]*applies[ \t]*\r?$",
+    re.MULTILINE,
+)
+
+
+def appendix_a_applies(body: str) -> bool:
+    """Return True when the PR body declares SOP Appendix A exception."""
+    return bool(APPENDIX_A_PATTERN.search(body))
+
 
 def section(body: str, heading: str) -> str:
     match = re.search(rf"^##\s+{re.escape(heading)}.*$", body, re.MULTILINE)
@@ -54,6 +67,8 @@ def check_pr_body(body: str, expected_head_sha: str | None = None) -> list[str]:
             errors.append(f"{label} reviewer is required")
         else:
             reviewers.append(reviewer.casefold())
+        # Reviewed SHA must always point at the current PR head; reviews are
+        # of the code being merged, never of a historical snapshot.
         if not SHA_PATTERN.fullmatch(reviewed_sha):
             errors.append(f"{label} requires a 40-character Reviewed SHA")
         elif expected_head_sha and reviewed_sha.lower() != expected_head_sha.lower():
@@ -61,9 +76,13 @@ def check_pr_body(body: str, expected_head_sha: str | None = None) -> list[str]:
         if conclusion != "APPROVE":
             errors.append(f"{label} conclusion must be APPROVE")
 
-    identities = ([implementer.casefold()] if implementer else []) + reviewers
-    if len(identities) != len(set(identities)):
-        errors.append("Implementer and both reviewers must be independent identities")
+    # Identity independence is required unless SOP Appendix A is declared.
+    # Appendix A allows single-developer dual-role reviews during the v0.6
+    # trial period; the declaration makes the exception machine-visible.
+    if not appendix_a_applies(body):
+        identities = ([implementer.casefold()] if implementer else []) + reviewers
+        if len(identities) != len(set(identities)):
+            errors.append("Implementer and both reviewers must be independent identities")
 
     acceptance_status = field(acceptance, "状态")
     if acceptance_status not in {"not-required", "GO", "NO-GO", "CONDITIONAL-GO", "EXPIRED"}:
@@ -71,10 +90,11 @@ def check_pr_body(body: str, expected_head_sha: str | None = None) -> list[str]:
     if acceptance_status != "not-required":
         candidate = field(acceptance, "Candidate SHA / Tag")
         record_path = field(acceptance, "Acceptance Record path")
+        # Candidate SHA validates a historical code snapshot (e.g. M0 verified
+        # against 3591987 while the acceptance record ships in a later PR), so
+        # it must be a 40-char hex but is NOT required to equal the PR head.
         if not SHA_PATTERN.fullmatch(candidate):
             errors.append("Candidate SHA must be a 40-character commit SHA")
-        elif expected_head_sha and candidate.lower() != expected_head_sha.lower():
-            errors.append("Candidate SHA must equal the current PR head")
         if not record_path:
             errors.append("Acceptance Record path is required for a milestone candidate")
         elif not re.fullmatch(r"docs/testing/acceptance/M[0-6]-acceptance\.md", record_path):

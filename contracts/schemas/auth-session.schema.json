@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pcb-cdso.local/schemas/auth-session.schema.json",
+  "title": "PCB-CDSO Auth Session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["access_token", "refresh_token", "expires_in", "user", "locale", "theme"],
+  "properties": {
+    "access_token": {"type": "string", "minLength": 16},
+    "refresh_token": {"type": "string", "minLength": 16},
+    "expires_in": {"type": "integer", "minimum": 1, "maximum": 86400},
+    "user": {"$ref": "user.schema.json"},
+    "locale": {"type": "string", "enum": ["zh-CN", "en-US"]},
+    "theme": {"type": "string", "enum": ["light", "dark"]}
+  }
+}

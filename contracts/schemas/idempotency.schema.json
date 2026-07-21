@@ -4,9 +4,12 @@
   "title": "PCB-CDSO Idempotency Record",
   "type": "object",
   "additionalProperties": false,
-  "required": ["idempotencyKey", "scope"],
+  "required": ["idempotencyKey", "scope", "actor_id", "canonical_request_hash", "status"],
   "properties": {
-    "idempotencyKey": {"type": "string", "minLength": 8, "maxLength": 128},
-    "scope": {"type": "string", "minLength": 1, "maxLength": 128}
+    "idempotencyKey": {"type": "string", "minLength": 1, "maxLength": 128},
+    "scope": {"type": "string", "minLength": 1, "maxLength": 128},
+    "actor_id": {"type": "string", "maxLength": 36},
+    "canonical_request_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"type": "string", "enum": ["IN_PROGRESS", "SUCCEEDED"]}
   }
 }

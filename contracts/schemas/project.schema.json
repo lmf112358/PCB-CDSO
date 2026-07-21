@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pcb-cdso.local/schemas/project.schema.json",
+  "title": "PCB-CDSO Project Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "owner_id", "template_version_id", "country_code", "admin_area", "city", "timezone", "status", "created_at"],
+  "properties": {
+    "id": {"type": "string", "maxLength": 36},
+    "name": {"type": "string", "minLength": 1, "maxLength": 120},
+    "owner_id": {"type": "string", "maxLength": 36},
+    "template_version_id": {"type": "string", "minLength": 1},
+    "country_code": {"type": "string", "pattern": "^[A-Z]{2}$"},
+    "admin_area": {"type": "string", "minLength": 1, "maxLength": 120},
+    "city": {"type": "string", "minLength": 1, "maxLength": 120},
+    "timezone": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "enum": ["ACTIVE", "ARCHIVED", "SOFT_DELETED"]},
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

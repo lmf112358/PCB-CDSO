@@ -2,7 +2,7 @@
 
 | 属性 | 值 |
 |---|---|
-| 状态 | implementing |
+| 状态 | verified |
 | Owner | Platform / Orchestrator |
 | PRD 追踪 | P0_01；P0_14 基线 |
 
@@ -22,4 +22,4 @@
 
 ## 质量结论
 
-候选提交 `3591987a59040dcc12a42b73a2a20640151de1f8` 已通过本地软件门禁，证据位于 `artifacts/acceptance/M0/`。GitHub 审计仍显示 `main protected=false` 且候选分支无 PR/CI 状态。启用分支保护、PR 必需检查全部通过并由产品方签认 `docs/testing/acceptance/M0-acceptance.md` 后，才能将状态更新为 `verified` 并进入 M1。
+候选提交 `3591987a59040dcc12a42b73a2a20640151de1f8` 已通过本地软件门禁，证据位于 `artifacts/acceptance/M0/`。产品负责人 2026-07-21 签认 `docs/testing/acceptance/M0-acceptance.md` 为 GO；main 分支保护已启用，合并 PR 的必需检查（governance/contract）通过即满足 GitHub Gate。M0 升级为 `verified`，可进入 M1。

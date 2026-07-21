@@ -1,6 +1,185 @@
 {
   "components": {
     "schemas": {
+      "ActorContext": {
+        "additionalProperties": false,
+        "properties": {
+          "actor_id": {
+            "maxLength": 36,
+            "minLength": 1,
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "locale": {
+            "enum": [
+              "zh-CN",
+              "en-US"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "ADMIN",
+              "ENGINEER"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "theme": {
+            "enum": [
+              "light",
+              "dark"
+            ],
+            "title": "Theme",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_id",
+          "role",
+          "locale",
+          "theme"
+        ],
+        "title": "ActorContext",
+        "type": "object"
+      },
+      "AuthSession": {
+        "additionalProperties": false,
+        "properties": {
+          "access_token": {
+            "minLength": 16,
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "maximum": 86400,
+            "minimum": 1,
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "locale": {
+            "enum": [
+              "zh-CN",
+              "en-US"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "refresh_token": {
+            "minLength": 16,
+            "title": "Refresh Token",
+            "type": "string"
+          },
+          "theme": {
+            "enum": [
+              "light",
+              "dark"
+            ],
+            "title": "Theme",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in",
+          "user",
+          "locale",
+          "theme"
+        ],
+        "title": "AuthSession",
+        "type": "object"
+      },
+      "CreateProjectRequest": {
+        "additionalProperties": false,
+        "description": "CreateProject command body. actorId is intentionally excluded; auth identity is injected from the Authorization header per docs/specs/m1/project-weather-dispatch.md.",
+        "properties": {
+          "adminArea": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Admin Area",
+            "type": "string"
+          },
+          "city": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "City",
+            "type": "string"
+          },
+          "countryCode": {
+            "description": "ISO 3166-1 alpha-2 upper-case.",
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "name": {
+            "description": "Trimmed; 1-120 Unicode characters after NFC normalization.",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "templateVersionId": {
+            "minLength": 1,
+            "title": "Template Version Id",
+            "type": "string"
+          },
+          "timezone": {
+            "description": "IANA timezone resolvable by server tzdata; UTC offsets are rejected.",
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "templateVersionId",
+          "countryCode",
+          "adminArea",
+          "city",
+          "timezone"
+        ],
+        "title": "CreateProjectRequest",
+        "type": "object"
+      },
+      "CreateProjectResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "inputRevision": {
+            "minimum": 1,
+            "title": "Input Revision",
+            "type": "integer"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectSummary"
+          },
+          "snapshotIds": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Snapshot Ids",
+            "type": "array"
+          },
+          "weatherTaskId": {
+            "minLength": 1,
+            "title": "Weather Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project",
+          "inputRevision",
+          "snapshotIds",
+          "weatherTaskId"
+        ],
+        "title": "CreateProjectResponse",
+        "type": "object"
+      },
       "ErrorEnvelope": {
         "properties": {
           "code": {
@@ -81,6 +260,104 @@
         "title": "LiveHealth",
         "type": "object"
       },
+      "LoginRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "maxLength": 320,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "ProjectSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "admin_area": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Admin Area",
+            "type": "string"
+          },
+          "city": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "City",
+            "type": "string"
+          },
+          "country_code": {
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 36,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_id": {
+            "maxLength": 36,
+            "title": "Owner Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "ARCHIVED",
+              "SOFT_DELETED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "template_version_id": {
+            "minLength": 1,
+            "title": "Template Version Id",
+            "type": "string"
+          },
+          "timezone": {
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "owner_id",
+          "template_version_id",
+          "country_code",
+          "admin_area",
+          "city",
+          "timezone",
+          "status",
+          "created_at"
+        ],
+        "title": "ProjectSummary",
+        "type": "object"
+      },
       "ReadyHealth": {
         "properties": {
           "dependencies": {
@@ -105,6 +382,21 @@
           "request_id"
         ],
         "title": "ReadyHealth",
+        "type": "object"
+      },
+      "RefreshRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "refresh_token": {
+            "minLength": 16,
+            "title": "Refresh Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshRequest",
         "type": "object"
       },
       "TaskEnvelope": {
@@ -163,6 +455,59 @@
         "title": "TaskEnvelope",
         "type": "object"
       },
+      "TaskList": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskEnvelope"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TaskList",
+        "type": "object"
+      },
+      "User": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "maxLength": 320,
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 36,
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "role": {
+            "enum": [
+              "ADMIN",
+              "ENGINEER"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role",
+          "is_active"
+        ],
+        "title": "User",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -203,6 +548,14 @@
         "title": "ValidationError",
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "opaque",
+        "description": "Opaque access token issued by POST /auth/login. Token hash is stored server-side in auth_sessions and can be revoked immediately.",
+        "scheme": "bearer",
+        "type": "http"
+      }
     }
   },
   "info": {
@@ -211,6 +564,221 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/auth/login": {
+      "post": {
+        "description": "Authenticate with email/password; returns access token, refresh session, user, locale and theme. Failure must not distinguish unknown user from wrong password (both UNAUTHENTICATED).",
+        "operationId": "auth_login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            },
+            "description": "Authenticated"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "value": {
+                      "code": "UNAUTHENTICATED",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.unauthenticated",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Invalid credentials."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "description": "Revoke the current session.",
+        "operationId": "auth_logout",
+        "responses": {
+          "204": {
+            "description": "Session revoked"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "value": {
+                      "code": "UNAUTHENTICATED",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.unauthenticated",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid token."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "description": "Return the ActorContext injected from the Authorization header.",
+        "operationId": "auth_me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActorContext"
+                }
+              }
+            },
+            "description": "Current actor"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "value": {
+                      "code": "UNAUTHENTICATED",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.unauthenticated",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid token."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Current actor",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "description": "Rotate access and refresh tokens. The previous tokens are invalidated immediately in the same transaction.",
+        "operationId": "auth_refresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            },
+            "description": "Rotated session"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "value": {
+                      "code": "UNAUTHENTICATED",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.unauthenticated",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Refresh token expired, revoked or user deactivated."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/health/live": {
       "get": {
         "operationId": "health_live",
@@ -304,6 +872,372 @@
         "summary": "Create Smoke Task",
         "tags": [
           "internal"
+        ]
+      }
+    },
+    "/projects": {
+      "post": {
+        "description": "Atomically create Project, immutable template/session snapshot, DISPATCH_PENDING weather Task and WeatherFetchRequested OutboxEvent in a single MySQL transaction. Idempotent by (actorId, Idempotency-Key). Response returns the same weatherTaskId on first create (201) and replay (200).",
+        "operationId": "project_create",
+        "parameters": [
+          {
+            "description": "Client-generated printable ASCII key; unique within actor scope. Not part of canonical request hash.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 1,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProjectResponse"
+                }
+              }
+            },
+            "description": "Idempotent replay returns the original aggregate"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProjectResponse"
+                }
+              }
+            },
+            "description": "Project created"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "value": {
+                      "code": "UNAUTHENTICATED",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.unauthenticated",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "FORBIDDEN": {
+                    "value": {
+                      "code": "FORBIDDEN",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.forbidden",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Role is neither ENGINEER nor ADMIN."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "NOT_FOUND": {
+                    "value": {
+                      "code": "NOT_FOUND",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.not_found",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "templateVersionId does not exist or is not visible; indistinguishable from random unknown id."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "IDEMPOTENCY_CONFLICT": {
+                    "value": {
+                      "code": "IDEMPOTENCY_CONFLICT",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.idempotency_conflict",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Idempotency-Key already bound to a different canonical request."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "TRANSACTION_FAILED": {
+                    "value": {
+                      "code": "TRANSACTION_FAILED",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.transaction_failed",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Pre-commit deterministic failure; safe to retry with the same key."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/tasks": {
+      "get": {
+        "description": "List tasks scoped to the actor (ENGINEER sees own; ADMIN sees all).",
+        "operationId": "task_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "projectId",
+            "required": false,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "activeOnly",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskList"
+                }
+              }
+            },
+            "description": "Task list"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "value": {
+                      "code": "UNAUTHENTICATED",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.unauthenticated",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "FORBIDDEN": {
+                    "value": {
+                      "code": "FORBIDDEN",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.forbidden",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Cross-owner access is denied for ENGINEER."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List tasks",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}": {
+      "get": {
+        "description": "Return a single task. Cross-owner existing id and random unknown id must return indistinguishable 404 (anti-enumeration).",
+        "operationId": "task_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskEnvelope"
+                }
+              }
+            },
+            "description": "Task"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "UNAUTHENTICATED": {
+                    "value": {
+                      "code": "UNAUTHENTICATED",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.unauthenticated",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "FORBIDDEN": {
+                    "value": {
+                      "code": "FORBIDDEN",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.forbidden",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Within caller scope but role lacks read permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "NOT_FOUND": {
+                    "value": {
+                      "code": "NOT_FOUND",
+                      "details": {},
+                      "field_path": null,
+                      "message_key": "example.not_found",
+                      "request_id": "req_example_0123456789abcdef"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Task not visible to caller or does not exist; indistinguishable."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get task",
+        "tags": [
+          "tasks"
         ]
       }
     }

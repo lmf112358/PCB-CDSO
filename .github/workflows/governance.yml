@@ -51,6 +51,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # Full history required: check_governance.py --acceptance-ready
+          # validates that Candidate SHA exists in the repository via
+          # git cat-file. Default fetch-depth: 1 only fetches the PR head,
+          # causing historical candidate SHAs (e.g. M0 verified against
+          # 3591987 while the acceptance record ships in a later PR) to
+          # fail validation.
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
         with:

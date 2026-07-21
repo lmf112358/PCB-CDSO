@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pcb-cdso.local/schemas/user.schema.json",
+  "title": "PCB-CDSO User",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "email", "role", "is_active"],
+  "properties": {
+    "id": {"type": "string", "maxLength": 36},
+    "email": {"type": "string", "format": "email", "maxLength": 320},
+    "role": {"type": "string", "enum": ["ADMIN", "ENGINEER"]},
+    "is_active": {"type": "boolean"}
+  }
+}
