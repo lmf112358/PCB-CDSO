@@ -360,8 +360,9 @@ Orchestrator 只派发依赖已满足的任务。Agent 完成不等于可合并�
 ### 豁免内容
 
 1. **PR 粒度**：可把同一 Wave 的多个 Task 合并到一个 PR（例如 Wave 1 的契约 + 迁移 + fixture 合并为一个 PR）。合并的 PR 必须在描述里列出每个 Task 的 commit SHA、测试映射和验收条件，保留可追溯性。
-2. **审查身份**：7.Step9 的"三个独立身份"放宽为"同一人在 Spec Review 和 Code Quality Review 两个角色下分别签字"，并在 PR 描述声明"试开发期单人审阅"。Acceptance 仍须独立于 Implementer（AGENTS.md 第 3 条不豁免）。
+2. **审查身份**：7.Step9 的"三个独立身份"放宽为"同一人在 Spec Review 和 Code Quality Review 两个角色下分别签字"。触发机制是 PR body 中包含声明行 `- SOP Appendix A: applies`（中英文冒号均可），`check_pr_body.py` 检测到此声明时跳过身份去重检查。无此声明时仍强制三身份独立。Acceptance 仍须独立于 Implementer（AGENTS.md 第 3 条不豁免）。
 3. **M0/M1 verified 的 GitHub Gate 证据**：main 分支保护已启用时，合并 PR 的必需检查（governance/contract 等）通过即视为 GitHub Gate 满足，不要求单独的 `protected=true` API 证据；原始审计快照保留为历史基线。
+4. **Acceptance Candidate SHA**：`check_pr_body.py` 的 Candidate SHA 检查不再强制等于 PR head，允许是仓库任意已存在的 40 字符 commit。这支持"验收历史代码快照"场景（如 M0 实现在 PR #1 合并、候选 SHA `3591987`，验收记录在后续 PR 合并）。Reviewed SHA 仍必须等于 PR head（审查针对当前 PR 代码）。
 
 ### 不豁免的内容
 
@@ -377,7 +378,7 @@ Orchestrator 只派发依赖已满足的任务。Agent 完成不等于可合并�
 
 ### 批准
 
-产品负责人李名沨 2026-07-22 批准本附录；批准依据是 PR 频率在单人试开发期造成不成比例的流程成本，且治理脚本机器门禁已能覆盖关键合规风险。
+产品负责人李名沨 2026-07-22 批准本附录；批准依据是 PR 频率在单人试开发期造成不成比例的流程成本，且治理脚本机器门禁已能覆盖关键合规风险。`scripts/quality/check_pr_body.py` 已同步实现附录 A 触发检测（PR body 声明 `- SOP Appendix A: applies`）与历史 Candidate SHA 放宽，对应测试见 `tests/governance/test_check_pr_body.py::SoloDevAppendixATest` 与 `HistoricalCandidateShaTest`。
 
 ## 9. 测试体系
 
