@@ -44,6 +44,27 @@
 - Handoff path：
 - Remaining risks / blockers：
 
+## Spec Review（由独立 Reviewer 填写）
+
+- Reviewer / Tool：
+- Reviewed SHA：
+- 结论：APPROVE / REQUEST-CHANGES
+- 验收条件、状态机、权限、失败路径、契约和范围意见：
+
+## Code Quality Review（由独立 Reviewer 填写）
+
+- Reviewer / Tool：
+- Reviewed SHA：
+- 结论：APPROVE / REQUEST-CHANGES
+- 测试设计、安全、性能、可维护性和可观察性意见：
+
+## Acceptance（阶段候选时填写）
+
+- Candidate SHA / Tag：
+- Acceptance Agent：
+- Acceptance Record path：
+- 状态：GO / NO-GO / CONDITIONAL-GO / EXPIRED / not-required
+
 ## 自检
 
 - [ ] 变更符合已批准 Spec，未扩大范围。
@@ -54,4 +75,3 @@
 - [ ] 用户文案已进入 zh-CN/en-US 资源。
 - [ ] 未提交密钥、敏感数据、临时导出或 Agent 推理日志。
 - [ ] `git diff --check` 和 required commands 已新鲜运行。
-

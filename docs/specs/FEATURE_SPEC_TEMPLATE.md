@@ -5,7 +5,7 @@
 | 状态 | draft / approved / implementing / verified / superseded |
 | 版本 | {{semver}} |
 | Owner | {{role_or_team}} |
-| Milestone | {{M0_to_M5}} |
+| Milestone | {{M0_to_M6}} |
 | Issue | {{github_issue}} |
 | PRD 追踪 | {{section_and_requirement}} |
 
@@ -68,4 +68,3 @@
 ## 阻断审批的问题
 
 只列出会改变实现或验收的问题。存在未关闭项时状态不得改为 approved。
-

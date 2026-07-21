@@ -10,6 +10,13 @@ body:
       placeholder: "docs/specs/... section ..."
     validations:
       required: true
+  - type: input
+    id: base_sha
+    attributes:
+      label: Base SHA
+      description: Full 40-character SHA of the reproduced defect.
+    validations:
+      required: true
   - type: textarea
     id: environment
     attributes:
@@ -27,6 +34,13 @@ body:
     id: reproduce
     attributes:
       label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: paths
+    attributes:
+      label: Allowed paths and active file lease
+      description: Repository-relative POSIX paths, owner, acquired time, and expiry.
     validations:
       required: true
   - type: textarea
@@ -60,4 +74,17 @@ body:
       options:
         - label: Evidence is sanitized and contains no secrets or customer data.
           required: true
-
+  - type: textarea
+    id: commands
+    attributes:
+      label: Regression and required commands
+      description: Exact failing reproduction, affected suite, and expected results.
+    validations:
+      required: true
+  - type: input
+    id: handoff
+    attributes:
+      label: Handoff path
+      placeholder: "docs/handoffs/GH-241.md"
+    validations:
+      required: true

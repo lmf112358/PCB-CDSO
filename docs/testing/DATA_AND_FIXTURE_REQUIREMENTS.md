@@ -18,6 +18,8 @@
 
 ## 2. 数据集总表
 
+每个 manifest 必须分别记录 `producer`、`softwareVerifier`、`expertApprover`。生产者与软件验证者不得是同一执行身份；未要求专家验收时 `expertApprover` 为 `null`，不得用待签字暗示已经完成专家验证。
+
 | 数据集 ID | 内容 | 最晚阶段 | 初始验证 | Owner | 主要验收用途 |
 |---|---|---|---|---|---|
 | `seed-product-templates` | 多层板、HDI、IC 载板模板及版本 | M1 | UNVERIFIED | 产品/PCB 专家 | 模板发布和项目创建 |
@@ -34,8 +36,8 @@
 | `fixture-weather-forecast` | 连续 168 小时预报 | M4 | SOFTWARE_VERIFIED | Data+QA | 未来预测 |
 | `fixture-weather-invalid` | 缺失、重复、越界、DST 反例 | M4 | SOFTWARE_VERIFIED | Data+QA | 失败与恢复 |
 | `fixture-concurrency` | revision、幂等、旧任务晚到 | M2-M4 | SOFTWARE_VERIFIED | API+QA | 原子性和 current |
-| `fixture-aggregation` | 区域/工艺/楼层/建筑/工厂预期 | M3-M5 | SOFTWARE_VERIFIED | Calculation+QA | 聚合守恒 |
-| `golden-csv` | 五维长表导出与 checksum | M5 | SOFTWARE_VERIFIED | QA | CSV 语义和编码 |
+| `fixture-aggregation` | 区域/工艺/楼层/建筑/工厂预期 | M3-M6 | SOFTWARE_VERIFIED | Calculation+QA | 聚合守恒 |
+| `golden-csv` | 五维长表导出与 checksum | M6 | SOFTWARE_VERIFIED | QA | CSV 语义和编码 |
 | `golden-ui` | 5 页面 × 中英 × 明暗截图 | M5 | SOFTWARE_VERIFIED | UI+QA | 主题和溢出 |
 | `expert-static-golden` | 专家签认静态样例 | 交付后 | EXPERT_VERIFIED | 暖通专家 | 领域验证升级 |
 
@@ -172,3 +174,4 @@ fixtures/
 6. 合并后不可原地修改；更新必须新版本。
 7. 专家签认单独生成记录并升级状态，不改历史发布快照。
 
+每次状态升级都必须追加 `verificationEvidence`，记录验证级别、验证人、时间、方法和签字记录路径。`EXPERT_VERIFIED` 必须存在对应专家证据；任何数据内容变化都创建新版本并重新计算 checksum。

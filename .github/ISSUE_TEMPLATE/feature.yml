@@ -17,6 +17,33 @@ body:
       placeholder: "M2 — docs/specs/controlled-answer.md@1.0.0"
     validations:
       required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: Agent role
+      options:
+        - Spec
+        - Contract
+        - Implementer
+        - Test
+        - Reviewer
+        - Acceptance
+    validations:
+      required: true
+  - type: input
+    id: base_sha
+    attributes:
+      label: Base SHA
+      description: Full 40-character SHA used to dispatch this task.
+    validations:
+      required: true
+  - type: textarea
+    id: checkout
+    attributes:
+      label: Branch and worktree or read-only ref
+      description: Writers provide branch/worktree; Reviewer/Acceptance provide PR ref or candidate SHA.
+    validations:
+      required: true
   - type: textarea
     id: scope
     attributes:
@@ -39,6 +66,13 @@ body:
     validations:
       required: true
   - type: textarea
+    id: lease
+    attributes:
+      label: Active file lease
+      description: Repository-relative POSIX paths, owner, acquired time, and expiry; write `read-only` for Reviewer/Acceptance.
+    validations:
+      required: true
+  - type: textarea
     id: dependencies
     attributes:
       label: Contracts, data, and dependencies
@@ -49,6 +83,20 @@ body:
     id: risks
     attributes:
       label: Risks and rollback
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Required commands
+      description: Exact commands and expected results.
+    validations:
+      required: true
+  - type: input
+    id: handoff
+    attributes:
+      label: Handoff path
+      placeholder: "docs/handoffs/GH-123.md"
     validations:
       required: true
   - type: checkboxes
@@ -62,4 +110,3 @@ body:
           required: true
         - label: Required contracts and fixtures exist or this Issue creates them first.
           required: true
-

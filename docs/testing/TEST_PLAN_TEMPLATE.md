@@ -15,9 +15,11 @@
 
 ## 验收追踪
 
-| Spec 条件 | Unit | Property | Contract | Integration | E2E | Visual | Performance | Expert |
-|---|---|---|---|---|---|---|---|---|
-| {{criterion}} | path/NA | path/NA | path/NA | path/NA | path/NA | path/NA | path/NA | record/NA |
+| Requirement ID | Spec 条件 | 预期/阈值 | Fixture 版本 | 层级 | 测试文件 | 精确命令 | 结果 | 证据 | NA 原因 |
+|---|---|---|---|---|---|---|---|---|---|
+| {{requirement_id}} | {{criterion}} | {{expected}} | {{fixture_version}} | unit/contract/integration/e2e/visual/performance/expert | {{path}} | {{command}} | not_run/pass/fail | {{evidence_path}} | {{reason_or_not_applicable}} |
+
+每个 Requirement ID 可以有多行覆盖不同层级；任何 `NA` 都必须说明为何该层级不适用，不能用 NA 掩盖缺测试。
 
 ## Fixture
 
@@ -34,4 +36,3 @@
 ## 失败分类
 
 定义产品缺陷、测试缺陷、fixture 缺陷、环境缺陷和专家待确认的判定与处理人。
-

@@ -5,7 +5,7 @@
 | 状态 | approved |
 | Owner | Calculation + API + QA |
 | 时间盒 | 1 天目标 |
-| PRD 追踪 | 3.5、4.3、5.3、8 |
+| PRD 追踪 | P0_08；3.5、4.3、5.3、8 |
 
 ## 目标
 

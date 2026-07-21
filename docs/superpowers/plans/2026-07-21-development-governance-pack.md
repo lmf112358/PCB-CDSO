@@ -26,7 +26,7 @@ Makefile                                       platform-neutral quality commands
 .github/workflows/governance.yml               governance CI
 docs/sop/DEVELOPMENT_SOP.md                    full development guide
 docs/architecture/adr/ADR_TEMPLATE.md          decision template
-docs/milestones/M0-M5-*.md                     executable phase boundaries
+docs/milestones/M0-M6-*.md                     executable phase boundaries
 docs/specs/FEATURE_SPEC_TEMPLATE.md             behavior spec template
 docs/plans/IMPLEMENTATION_PLAN_TEMPLATE.md      task plan template
 docs/testing/TEST_PLAN_TEMPLATE.md              test design template
@@ -67,7 +67,7 @@ test:
 verify: governance test
 
 acceptance:
-	$(PYTHON) scripts/quality/check_governance.py --acceptance-ready
+	$(PYTHON) scripts/quality/check_governance.py --acceptance-ready $(MILESTONE)
 ```
 
 - [ ] **Step 3: Normalize text files**
@@ -143,7 +143,7 @@ Describe Orchestrator, Spec Agent, Implementer, Test Agent, Reviewer, and Accept
 
 - [ ] **Step 6: Define stage acceptance**
 
-For M0-M5, list Definition of Ready, exit evidence, mandatory tests, demo path, data requirements, and stop/go decision. Keep software verification separate from expert validation.
+For M0-M6, list Definition of Ready, exit evidence, mandatory tests, demo path, data requirements, and stop/go decision. Keep software verification separate from expert validation.
 
 - [ ] **Step 7: Commit**
 
@@ -224,7 +224,7 @@ git add docs/testing/DATA_AND_FIXTURE_REQUIREMENTS.md contracts/seeds fixtures/R
 git commit -m "docs: define governed data and fixture requirements"
 ```
 
-### Task 6: Add M0-M5 milestone specifications
+### Task 6: Add M0-M6 milestone specifications
 
 **Files:**
 - Create: `docs/milestones/M0-repository-baseline.md`
@@ -232,7 +232,8 @@ git commit -m "docs: define governed data and fixture requirements"
 - Create: `docs/milestones/M2-controlled-data-collection.md`
 - Create: `docs/milestones/M3-static-calculation.md`
 - Create: `docs/milestones/M4-weather-simulation-forecast.md`
-- Create: `docs/milestones/M5-results-export-delivery.md`
+- Create: `docs/milestones/M5-results-center.md`
+- Create: `docs/milestones/M6-export-delivery-closure.md`
 
 - [ ] **Step 1: Apply a common milestone structure**
 
@@ -242,9 +243,9 @@ Each file must include metadata, objective, included/excluded scope, dependencie
 
 M0 covers clean startup and governance; M1 covers first admin, engineer accounts, immutable template snapshots, and project ownership; M2 covers eight-stage question flow, strong validation, process coverage, revisions, and save/resume.
 
-- [ ] **Step 3: Populate M3-M5 from PRD**
+- [ ] **Step 3: Populate M3-M6 from PRD**
 
-M3 covers traceable static formulas and aggregation; M4 covers weather, UTC axis, three-year simulation, seven-day forecast, and task correctness; M5 covers result tabs, zone drill-down, CSV semantics, bilingual themes, deployment, and final acceptance.
+M3 covers traceable static formulas and aggregation; M4 covers weather, UTC axis, three-year simulation, seven-day forecast, and task correctness; M5 covers result tabs, zone drill-down, bilingual themes; M6 covers CSV semantics, deployment, and final acceptance.
 
 - [ ] **Step 4: Cross-check requirements**
 
@@ -254,7 +255,7 @@ Run a PRD-to-milestone traceability review. Every P0 bullet in `docs/product/PRD
 
 ```bash
 git add docs/milestones
-git commit -m "docs: define executable M0 through M5 milestones"
+git commit -m "docs: define executable M0 through M6 milestones"
 ```
 
 ### Task 7: Add GitHub collaboration policy
@@ -304,7 +305,7 @@ Expected: FAIL because `scripts.quality.check_governance` does not exist.
 
 - [ ] **Step 3: Implement the minimum checker**
 
-Use only the Python standard library. Check required paths, UTF-8 decoding, JSON syntax, allowed metadata statuses, forbidden unfinished markers in approved files, and optional `--acceptance-ready` requirements. Print each failure and exit 1; print a concise success summary and exit 0 otherwise.
+Use only the Python standard library. Check required paths, UTF-8 decoding, JSON syntax, allowed metadata statuses, forbidden unfinished markers in approved files, and milestone-specific `--acceptance-ready M0..M6` requirements. Print each failure and exit 1; print a concise success summary and exit 0 otherwise.
 
 - [ ] **Step 4: Run tests and full verification**
 
@@ -353,23 +354,22 @@ Expected: checker passes, all tests pass, `git diff --check` has no output, and 
 
 Write commands, exit codes, repository SHA, reviewed files, reader-test findings, deviations, and final decision in the acceptance record.
 
-- [ ] **Step 4: Commit and tag**
+- [ ] **Step 4: Commit acceptance record**
 
 ```bash
 git add docs/testing/governance-pack-acceptance-2026-07-21.md
 git commit -m "docs: accept development governance pack"
-git tag -a governance-v0.1.0 -m "PCB-CDSO development governance baseline"
 ```
 
-- [ ] **Step 5: Verify final state**
+- [ ] **Step 5: Integrate, verify final main, then tag**
 
 Run:
 
 ```bash
 git status --short --branch
 git log --oneline --decorate -10
+git tag -a governance-v0.1.0 -m "PCB-CDSO development governance baseline"
 git tag --list "governance-*"
 ```
 
-Expected: clean `main`, governance commits visible, and tag `governance-v0.1.0` present.
-
+Expected: the branch has been integrated, final `main` is clean and freshly verified, governance commits are visible, and tag `governance-v0.1.0` points to the verified main commit rather than a pre-merge branch commit.

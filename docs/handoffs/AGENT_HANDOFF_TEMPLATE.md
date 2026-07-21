@@ -5,7 +5,7 @@
 | 状态 | draft / ready_for_review / blocked / accepted |
 | 日期与时区 | ISO-8601，Asia/Shanghai |
 | Agent / 工具 | 名称与版本 |
-| 角色 | Spec / Implementer / Test / Reviewer / Acceptance |
+| 角色 | Spec / Contract / Implementer / Test / Reviewer / Acceptance |
 | Issue | GitHub Issue 链接或编号 |
 | Source Spec | 仓库相对路径与版本 |
 | Branch / Worktree | 分支与绝对路径 |
@@ -52,4 +52,3 @@
 - [ ] `git diff --check` 通过。
 - [ ] 没有任务外文件、密钥、跳过测试或未解释生成物。
 - [ ] 交接信息足以让新 Agent 在不读聊天记录时继续。
-

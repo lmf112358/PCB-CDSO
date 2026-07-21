@@ -11,5 +11,4 @@ test:
 verify: governance test
 
 acceptance:
-	$(PYTHON) scripts/quality/check_governance.py --acceptance-ready
-
+	$(PYTHON) scripts/quality/check_governance.py --acceptance-ready $(MILESTONE)

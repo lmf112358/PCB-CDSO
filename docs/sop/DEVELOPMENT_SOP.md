@@ -70,7 +70,7 @@ PRD
 | `AGENTS.md` | 技术负责人 | 统一所有 Agent 行为 | 禁止并行派发 |
 | 系统上下文/数据流 | 技术负责人 | 系统边界和数据路径 | 不得冻结架构 |
 | 技术 ADR | 技术负责人 | 框架、认证、任务、存储决策 | 对应模块不得编码 |
-| M0-M5 Milestone Spec | 产品+技术 | 阶段范围和门禁 | 对应阶段不得开始 |
+| M0-M6 Milestone Spec | 产品+技术 | 阶段范围和门禁 | 对应阶段不得开始 |
 | Feature Spec | Spec Agent | 单功能行为与失败路径 | 对应功能不得编码 |
 | OpenAPI / JSON Schema | API/数据负责人 | 机器可执行契约 | 前后端不得并行 |
 | Test Plan | Test Agent | 风险与验收映射 | 不得进入实现 |
@@ -303,6 +303,10 @@ PR 必须：
 
 ## 8. 多 Agent 并行模型
 
+统一角色为 Orchestrator、Spec Agent、Contract Agent、Implementer、Test Agent、Reviewer 和 Acceptance Agent。Contract Agent 只冻结机器契约及生成类型，不同时实现多个消费者；Reviewer 只读检出 PR merge ref/head SHA，Acceptance Agent 只读检出候选 SHA/标签或干净 main。只读角色不申请文件租约，除非另开 `spec/` 任务提交审查文档。
+
+租约路径使用仓库相对 POSIX 格式、禁止 `..`，Windows 比较时不区分大小写；目录覆盖全部子路径，glob 与实际匹配路径冲突，重命名同时占用源/目标，生成文件必须显式列入。单一 Orchestrator 串行登记和释放租约，避免两个调度者同时占用同一路径。
+
 ### 8.1 可安全并行
 
 - 已冻结 OpenAPI 后：Web 客户端、API 实现、契约测试。
@@ -376,7 +380,7 @@ Orchestrator 只派发依赖已满足的任务。Agent 完成不等于可合并�
 4. 一次只验证一个根因假设。
 5. 连续三次失败后停止补丁式尝试，回到 Spec/ADR 检查架构。
 
-## 10. M0-M5 阶段推进
+## 10. M0-M6 阶段推进
 
 ### M0：仓库和契约基线
 
@@ -408,11 +412,17 @@ Orchestrator 只派发依赖已满足的任务。Agent 完成不等于可合并�
 
 门禁：缺失/重复/DST、插值边界、PCW 系数、幂等、取消/重试、任务乱序和重启恢复通过。
 
-### M5：结果、导出和交付
+### M5：结果中心
 
-交付：五 Tab、统一筛选、区域下钻、五维 CSV、中英文/明暗主题、Docker Compose 和验收记录。
+交付：五 Tab、统一筛选、区域下钻、关键图表、五维查询、中英文/明暗主题。
 
-门禁：CSV 长表语义和 checksum、权限、四主题截图、性能基线、PRD 验收剧本、干净部署全部通过。
+门禁：UI/API 查询一致、权限、筛选保持、三次交互区域定位和四主题截图全部通过。
+
+### M6：导出与试开发收口
+
+交付：五维长表 CSV、审计、三个示例项目、性能基线、Docker Compose、备份/回滚和最终验收记录。
+
+门禁：CSV schema/checksum、失效/权限/清理、空库部署、PRD 六剧本和 P0 追踪全部通过；合并 main 后才创建试开发标签。
 
 每阶段完整 DoR/DoD 和测试矩阵见对应 `docs/milestones/` 文件。
 
@@ -465,6 +475,10 @@ trial-v0.6.0
 
 回滚必须同时定义应用版本、数据库迁移、配置/seed 快照和导出兼容性。无法安全回滚的变化在 ADR 和 PR 中明确，合并前提供前滚修复路径与备份验证。
 
+验收状态统一使用 `draft / GO / NO-GO / CONDITIONAL-GO / EXPIRED`。安全、越权、数据完整性、不可恢复迁移、Milestone 停止条件、required test 失败或必需签字缺失一律 NO-GO；CONDITIONAL-GO 只允许不影响主链和数据正确性的非阻断偏差，并必须有 Owner、Issue、到期日、复验命令和失败处置，过期自动转 EXPIRED 并按 NO-GO 处理。
+
+阶段验收统一运行 `make acceptance MILESTONE=M0`。标准输入路径为 `docs/testing/plans/M0-test-plan.md` 和 `docs/testing/acceptance/M0-acceptance.md`，M1-M6 依此命名。进入 acceptance-ready 必须是 `GO`，记录 40 位 Candidate SHA，至少包含一行通过证据，且每个证据路径在当前工作区真实存在。
+
 ## 14. 常见失败与处理
 
 | 失败 | 处理 |
@@ -486,5 +500,4 @@ trial-v0.6.0
 4. 冻结 HDI seed manifest、字段 registry 和气象 CSV fixture。
 5. 创建 M1 Feature Specs 和测试计划。
 6. 从最小纵向链开始：空库启动 → 登录 → 建项目 → 一个受控问题 → 保存 → 查询。
-7. 每次扩展保持同一条链可运行，直到 M5。
-
+7. 每次扩展保持同一条链可运行，直到 M6。

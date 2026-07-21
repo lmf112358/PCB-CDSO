@@ -30,7 +30,7 @@ Python 命令是跨平台事实，Makefile 是便捷入口：
 python scripts/quality/check_governance.py
 python -m unittest discover -s tests -p "test_*.py" -v
 make verify
-make acceptance
+make acceptance MILESTONE=M0
 ```
 
 | 命令 | 作用 |
@@ -38,7 +38,7 @@ make acceptance
 | `make governance` | 校验治理文件、状态、JSON 和未完成标记 |
 | `make test` | 运行治理单元测试；M0 后扩展为项目测试入口 |
 | `make verify` | 本地提交前的默认质量门禁 |
-| `make acceptance` | 检查 M0-M5 验收资料是否齐备 |
+| `make acceptance MILESTONE=M0` | 检查指定 M0-M6 阶段的 Test Plan、验收记录和证据是否齐备 |
 
 ## Git 工作方式
 
@@ -51,4 +51,3 @@ make acceptance
 ## 当前状态
 
 仓库处于开发治理与 M0 准备阶段。产品参数即使通过软件测试，也必须在专家签认前保持 `UNVERIFIED` 或 `SOFTWARE_VERIFIED`，不得宣称为国家标准验证结果。
-

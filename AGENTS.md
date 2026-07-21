@@ -35,6 +35,7 @@
 |---|---|---|
 | Orchestrator | 拆分任务、维护依赖图、分配路径所有权、决定合并顺序 | 同时派两个写入者修改同一文件 |
 | Spec Agent | 编写 Spec、ADR、验收条件和追踪矩阵 | 在规格未批准时实现产品代码 |
+| Contract Agent | 冻结 OpenAPI、Schema、迁移和生成类型 | 同时实现多个消费者或改变产品语义 |
 | Implementer | 按计划和 TDD 做最小实现 | 改动任务外范围或上游契约 |
 | Test Agent | 设计失败路径、边界、fixture、E2E 和验收证据 | 只追求覆盖率而忽略行为 |
 | Reviewer | 独立核对规格、diff、测试与风险 | 依赖实现者的口头解释代替证据 |
@@ -49,7 +50,7 @@
 ```yaml
 issue: "GH-编号"
 objective: "一个可观察结果"
-role: "Spec | Implementer | Test | Reviewer | Acceptance"
+role: "Spec | Contract | Implementer | Test | Reviewer | Acceptance"
 base_sha: "40 位提交 SHA"
 branch: "类型/issue-英文短名"
 worktree: "绝对路径"
@@ -75,9 +76,11 @@ handoff_path: "docs/handoffs/记录文件.md"
 - 每个 Issue 使用独立短分支：`feat/`、`fix/`、`spec/` 或 `chore/`。
 - 默认每个写入 Agent 使用独立 worktree。若本机透明加密或沙箱使 linked worktree 不可读，必须保存哈希/错误证据，退化为独立分支就地开发，并确保同时只有一个写入 Agent。
 - GitHub Issue 是路径租约登记处。Orchestrator 在 Issue 中维护 `Active file lease` 清单；相交路径未释放前不得派发第二个写入任务。
+- 路径租约统一为仓库相对 POSIX 路径并禁止 `..`；Windows 比较不区分大小写。目录租约覆盖全部子路径，glob 与任何实际匹配路径冲突；重命名同时租赁源和目标，生成文件也必须列入。符号链接按解析后的仓库内路径判断。单一 Orchestrator 是租约串行化入口，不允许两个调度者并发派发。
 - Agent 只能修改 `allowed_paths`。发现任务外必要改动时先停下，请求扩展任务包。
 - 接口变更先合并契约 PR，再从新 main 派发前端、后端、测试等消费者任务。
 - 不得使用 `git reset --hard`、强推、删除他人分支、跳过 hooks 或批量覆盖冲突。
+- Reviewer 只读检出 PR merge ref 或 PR head SHA；Acceptance Agent 只读检出候选 SHA/标签或合并后的干净 main。只读任务不申请文件租约，也不创建写分支；发现问题通过 review/Issue 返回 Implementer。只有需要提交审查文档时才另建 `spec/` 分支和独立任务包。
 
 ## 6. SDD 与 TDD
 
@@ -125,4 +128,3 @@ Agent 只有在以下条件全部满足时才可报告完成：
 - 变更没有未解释的生成文件或任务外文件。
 - handoff 记录已填写并包含风险与未完成项。
 - 未解决项明确标记为 blocker，不能用“基本完成”替代。
-
