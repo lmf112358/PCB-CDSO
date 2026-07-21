@@ -36,17 +36,25 @@ class ContractSchemaTest(unittest.TestCase):
         for name, required_fields in EXPECTED_REQUIRED.items():
             with self.subTest(schema=name):
                 path = SCHEMA_DIR / name
-                self.assertTrue(path.is_file(), f"missing schema: {path.relative_to(ROOT)}")
+                self.assertTrue(
+                    path.is_file(), f"missing schema: {path.relative_to(ROOT)}"
+                )
                 schema = json.loads(path.read_text(encoding="utf-8"))
-                self.assertEqual("https://json-schema.org/draft/2020-12/schema", schema["$schema"])
-                self.assertTrue(schema["$id"].startswith("https://pcb-cdso.local/schemas/"))
+                self.assertEqual(
+                    "https://json-schema.org/draft/2020-12/schema", schema["$schema"]
+                )
+                self.assertTrue(
+                    schema["$id"].startswith("https://pcb-cdso.local/schemas/")
+                )
                 self.assertEqual("object", schema["type"])
                 self.assertFalse(schema["additionalProperties"])
                 self.assertEqual(required_fields, set(schema["required"]))
                 self.assertTrue(required_fields.issubset(schema["properties"]))
 
     def test_task_status_is_closed_and_progress_is_bounded(self) -> None:
-        schema = json.loads((SCHEMA_DIR / "task.schema.json").read_text(encoding="utf-8"))
+        schema = json.loads(
+            (SCHEMA_DIR / "task.schema.json").read_text(encoding="utf-8")
+        )
         self.assertEqual(
             ["QUEUED", "RUNNING", "SUCCEEDED", "FAILED", "CANCELLED"],
             schema["properties"]["status"]["enum"],
