@@ -393,3 +393,87 @@ class GovernanceCheckerTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AcceptanceCandidateShaShallowCloneTest(unittest.TestCase):
+    """Candidate SHA validation must tolerate shallow CI checkouts.
+
+    In CI, actions/checkout defaults to fetch-depth: 1, so a Candidate SHA
+    that points at a historical commit (e.g. M0 verified against 3591987
+    while the acceptance record ships in a later PR) is absent from the
+    shallow clone. The gate must not block on git cat-file failure when the
+    CI environment cannot provide full history; format validation (40-char
+    hex) and evidence presence remain required.
+    """
+
+    def _make_repo_with_git_dir(self, root: Path) -> None:
+        """Initialize a real git repo in the temp dir so .git exists."""
+        import subprocess
+
+        make_valid_repository(root)
+        make_acceptance_artifacts(root)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True, capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        )
+        # Commit only one file so the commit SHA is unrelated to the
+        # Candidate SHA 'aaaa...' written by make_acceptance_artifacts.
+        subprocess.run(["git", "add", "AGENTS.md"], cwd=root, check=True, capture_output=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "init"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        )
+
+    def test_shallow_clone_with_ci_env_does_not_block_on_missing_sha(self) -> None:
+        """CI env + .git present + cat-file fails -> format-only check, no block."""
+        import os
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._make_repo_with_git_dir(root)
+            # Candidate SHA 'a'*40 does NOT exist in this fresh repo.
+            env = dict(os.environ, CI="true")
+            result = subprocess.run(
+                [sys.executable, str(CHECKER), "--root", str(root), "--acceptance-ready", "M0"],
+                capture_output=True,
+                text=True,
+                env=env,
+                check=False,
+            )
+            sha_errors = [
+                line for line in result.stdout.splitlines()
+                if "Candidate SHA is not a repository commit" in line
+            ]
+            self.assertEqual(
+                [],
+                sha_errors,
+                f"CI shallow-clone must not block on historical SHA; got {sha_errors}",
+            )
+
+    def test_local_without_ci_env_still_blocks_on_missing_sha(self) -> None:
+        """Without CI env, missing SHA in a real git repo still blocks (local guard)."""
+        import os
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._make_repo_with_git_dir(root)
+            env = {k: v for k, v in os.environ.items() if k != "CI"}
+            result = subprocess.run(
+                [sys.executable, str(CHECKER), "--root", str(root), "--acceptance-ready", "M0"],
+                capture_output=True,
+                text=True,
+                env=env,
+                check=False,
+            )
+            self.assertIn("Candidate SHA is not a repository commit", result.stdout)
