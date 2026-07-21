@@ -1,0 +1,65 @@
+name: Feature slice
+description: A spec-backed, testable vertical slice
+title: "[Feature]: "
+labels: ["type:feature", "status:triage"]
+body:
+  - type: input
+    id: outcome
+    attributes:
+      label: Observable outcome
+      description: One user or system result; do not list implementation tasks.
+    validations:
+      required: true
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone and source spec
+      placeholder: "M2 — docs/specs/controlled-answer.md@1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and non-goals
+      description: Separate included behavior from explicit non-goals.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use Given/When/Then or numeric assertions.
+    validations:
+      required: true
+  - type: textarea
+    id: paths
+    attributes:
+      label: Allowed and forbidden paths
+      description: Required for agent file leases.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Contracts, data, and dependencies
+      description: Include versions, fixture checksums, Issues, and PRs.
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and rollback
+    validations:
+      required: true
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: Definition of Ready
+      options:
+        - label: Milestone and Feature Spec are approved.
+          required: true
+        - label: Acceptance is objectively testable.
+          required: true
+        - label: Required contracts and fixtures exist or this Issue creates them first.
+          required: true
+

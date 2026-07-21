@@ -1,0 +1,63 @@
+name: Defect report
+description: A reproducible deviation from an approved specification
+title: "[Bug]: "
+labels: ["type:bug", "status:triage"]
+body:
+  - type: input
+    id: spec
+    attributes:
+      label: Violated spec or invariant
+      placeholder: "docs/specs/... section ..."
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and candidate SHA
+      description: OS, browser, containers, DB migration, timezone, SHA.
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Fixture and checksum
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result and evidence
+      description: Include error code, request ID, logs, screenshot, CSV, or numeric delta.
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - P0 — security, data corruption, or acceptance blocker
+        - P1 — main flow unavailable or materially wrong result
+        - P2 — recoverable secondary behavior
+        - P3 — cosmetic or low-impact issue
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety
+      options:
+        - label: Evidence is sanitized and contains no secrets or customer data.
+          required: true
+

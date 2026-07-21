@@ -1,0 +1,15 @@
+# Replace the organization prefix only if the GitHub organization differs.
+# Keep path responsibility stable after branch protection is enabled.
+
+*                                      @pcb-cdso/maintainers
+/docs/product/                         @pcb-cdso/product
+/docs/specs/                           @pcb-cdso/product @pcb-cdso/maintainers
+/docs/architecture/                    @pcb-cdso/maintainers
+/contracts/                            @pcb-cdso/api @pcb-cdso/qa
+/fixtures/                             @pcb-cdso/qa
+/apps/web/                             @pcb-cdso/web
+/services/api/                         @pcb-cdso/api
+/services/api/domain/calculation/      @pcb-cdso/calculation @pcb-cdso/qa
+/infra/                                @pcb-cdso/platform
+/.github/                              @pcb-cdso/maintainers
+
