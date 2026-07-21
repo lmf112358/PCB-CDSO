@@ -8,8 +8,10 @@ from redis import Redis
 from pcb_cdso.core.config import Settings, get_settings
 from pcb_cdso.db.session import build_engine, probe_database
 from pcb_cdso.db.session import build_session_factory
+from pcb_cdso.domain.projects import ProjectService
 from pcb_cdso.http.auth import AuthService, build_auth_router, build_get_actor
 from pcb_cdso.http.errors import ApiError, api_error_handler, unexpected_error_handler
+from pcb_cdso.http.projects import build_projects_router
 from pcb_cdso.http.health import build_health_router
 from pcb_cdso.http.request_id import RequestIdMiddleware
 from pcb_cdso.http.tasks import (
@@ -35,6 +37,7 @@ def create_app(
     idempotency_store: IdempotencyStore | None = None,
     task_dispatcher: TaskDispatcher | None = None,
     auth_service: AuthService | None = None,
+    project_service: ProjectService | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     engine = build_engine(resolved_settings)
@@ -63,6 +66,15 @@ def create_app(
     app.include_router(
         build_auth_router(
             resolved_auth_service,
+            build_get_actor(resolved_auth_service),
+        )
+    )
+    resolved_project_service = project_service or ProjectService(
+        build_session_factory(engine)
+    )
+    app.include_router(
+        build_projects_router(
+            resolved_project_service,
             build_get_actor(resolved_auth_service),
         )
     )
