@@ -19,7 +19,7 @@
 | Task 运行阻断八阶段问答 | high | medium | 固定 RUNNING Task 并完成后续确认 | yes |
 | 双 Tab 重复提交或旧 revision 覆盖 | high | high | 并发屏障、409、零部分写入和消息去重 | yes |
 | 权限变化后仍显示或轮询他人资源 | high | medium | ENGINEER A/B 与 ADMIN 权限矩阵、日志脱敏 | yes |
-| 轮询失败被误判为 Task 失败 | medium | medium | 401/403/404/网络/游标失效故障注入 | yes |
+| 轮询失败被误判为 Task 失败 | medium | medium | 401/404/网络/游标失效故障注入 | yes |
 | 双语、明暗或键盘路径不可用 | high | medium | 四组合 visual/E2E、axe、键盘与 200% 缩放 | yes |
 
 ## 测试用例
@@ -39,7 +39,7 @@
 | M2-C-004 | contract | 可放行 warning；有效 revision/impact token | 首次确认；检查 challenge 绑定；分别提交空 reason、显示文案 code、合法双语 code/reason；最终确认；重放与改变 revision | 首次 token 原子消费并返回未绑定 reason 的 challenge；非法原因 `422`；合法原因原子签发 reason-bound token；最终只接受新 token并 commit；幂等重放返回原响应，不同 key token 重放 `TOKEN_ALREADY_USED`，revision 变化 `REVISION_CONFLICT` | `python -m pytest tests/contracts/test_conversation_contract.py::test_warning_challenge_reasons_and_final_token_contract -q` | `artifacts/acceptance/M2/M2-C-004.txt` |
 | M2-I-001 | integration/real-MySQL | 空测试 schema；有效 draft/token/revision | 在答案、审计、revision、失效标记各写点注入 pre-commit 失败 | 每例整体回滚；成功例原子写入且 revision 只加 1 | `python -m pytest tests/integration/test_answer_command.py::test_answer_commit_is_atomic_at_every_write_point -q` | `artifacts/acceptance/M2/M2-I-001.txt` |
 | M2-I-002 | integration | static/historical/forecast 结果均存在 | 分别修改只影响一个或多个域的已提交字段 | 按影响分析精确标记对应域失效；未影响域不变；审计记录前后 revision | `python -m pytest tests/integration/test_answer_command.py::test_committed_answer_propagates_domain_invalidation -q` | `artifacts/acceptance/M2/M2-I-002.txt` |
-| M2-I-003 | integration/security | ENGINEER A/B、ADMIN；A 项目和对话/Task；固定随机不存在 task id | B 写 A 资源、列表查询、单查 A 的存在 task id 与随机 id；ADMIN 查授权资源 | 越权写为 `403` 且零写入；列表 `200` 并过滤；B 两种单项 GET 均为不可区分 `404` envelope/message/timing class；响应/日志不泄露内容；ADMIN 按授权可见 | `python -m pytest tests/integration/test_conversation_authorization.py -q` | `artifacts/acceptance/M2/M2-I-003.txt` |
+| M2-I-003 | integration/security | ENGINEER A/B、受限角色、ADMIN；A 项目/对话/草稿/确认/Task；固定随机不存在 id；受限角色 scope 内资源 | B 对 A 各类单项资源读写、随机 id 读写、列表查询；受限角色写 scope 内资源；ADMIN 查授权资源 | scoped lookup 优先：B 跨 owner 的存在 id 与随机 id 的单项读写均为不可区分 `404` envelope/message/timing class且零写入；列表 `200` 并过滤；仅受限角色对已定位 scope 内资源的禁用写操作为 `403`；响应/日志不泄露内容；ADMIN 按授权可见 | `python -m pytest tests/integration/test_conversation_authorization.py -q` | `artifacts/acceptance/M2/M2-I-003.txt` |
 | M2-I-004 | integration/real-MySQL | warning challenge/token 故障注入；幂等与答案表 | 在首次 token 消费+challenge、原因验证+reason-bound token、最终 token 消费+commit 各事务写点故障并模拟响应丢失 | 三段各自原子；网络丢包同 key/hash 返回原响应；不同 key 无 token 可重复使用窗口；成功后至多一次答案/revision/audit | `python -m pytest tests/integration/test_answer_command.py::test_warning_challenge_reason_token_transactions_are_atomic -q` | `artifacts/acceptance/M2/M2-I-004.txt` |
 | M2-I-005 | integration/concurrency | 同问题 Tab A/B 各有稳定 draftId；可控制请求顺序 | A/B 交错 autosave，制造同 draftId CAS 冲突；A commit；随后送达旧 save 与旧 clear 的全部顺序排列 | draftVersion 单调；冲突 `409` 且两版本可选；A commit 只条件清 A 的匹配版本；B 和较新 A 草稿不被清；迟到 save/clear 不覆盖或删除新版本 | `python -m pytest tests/integration/test_composer_draft_concurrency.py -q` | `artifacts/acceptance/M2/M2-I-005.txt` |
 | M2-E-001 | e2e/API/performance | Docker Compose M2；ENGINEER；已发布 HDI 模板；M1 fake dispatcher | 创建“深圳 HDI 工厂”，选择 `CN/广东省/深圳市/Asia/Shanghai` 并确认 | 2 秒内时间线 Tool Card 与 360px 任务坞显示 API/数据库同一持久化 task id；无第二 Task | `python -m pytest tests/e2e/test_expert_conversation_workspace.py::test_shenzhen_hdi_tool_card_and_dock_share_persisted_task_id -q` | `artifacts/acceptance/M2/M2-E-001.json` |
@@ -48,7 +48,7 @@
 | M2-E-004 | e2e | M2-E-003；有效账号 | 登出并重新登录后打开项目 | 从服务端恢复阶段、时间线、草稿、偏好和任务坞；不依赖旧前端内存 | `python -m pytest tests/e2e/test_expert_conversation_workspace.py::test_relogin_restores_server_state -q` | `artifacts/acceptance/M2/M2-E-004.zip` |
 | M2-E-005 | e2e/concurrency | 同一工程师两个浏览器 Tab，均为 revision 12 | A 提交至 13；B 用 revision 12 确认；切换 Tab 并轮询 | B 为 `409`、零部分写入且草稿保留；两 Tab 最终 revision 13；无重复消息、Task 或进度重置 | `python -m pytest tests/e2e/test_expert_conversation_workspace.py::test_two_tabs_conflict_without_duplicate_task_or_message -q` | `artifacts/acceptance/M2/M2-E-005.zip` |
 | M2-E-006 | e2e | 当前面积字段未提交 | 在 Composer 输入自然语言答案并发送，检查卡片和数据库，再点击确认 | 确认前只出现结构化 Confirmation Card 且业务值不变；确认后才原子写入规范化 SI 值 | `python -m pytest tests/e2e/test_expert_conversation_workspace.py::test_natural_language_only_creates_confirmation_card -q` | `artifacts/acceptance/M2/M2-E-006.zip` |
-| M2-E-007 | e2e/recovery | 活动 Task；可控制 GET 响应与时钟 | 注入网络失败、401、403、404、过期游标；恢复网络/登录/权限 | 网络失败显示陈旧而非 FAILED；401 停轮询并重登恢复；403/404 移除不可见项；游标失效全量重取；始终同 task id | `python -m pytest tests/e2e/test_task_dock_recovery.py::test_polling_auth_and_cursor_failures_recover_from_server -q` | `artifacts/acceptance/M2/M2-E-007.zip` |
+| M2-E-007 | e2e/recovery | 活动 Task；可控制 GET 响应与时钟 | 注入网络失败、401、scoped 404、过期游标；恢复网络/登录/权限 | 网络失败显示陈旧而非 FAILED；401 停轮询并重登恢复；404 移除不可见项且不泄露存在性；游标失效全量重取；始终同 task id | `python -m pytest tests/e2e/test_task_dock_recovery.py::test_polling_auth_and_cursor_failures_recover_from_server -q` | `artifacts/acceptance/M2/M2-E-007.zip` |
 | M2-E-008 | e2e/layout | 至少 4 个活动 Task；支持的最小桌面视口 | 展开/折叠任务坞，按 `Ctrl/Cmd+J`，滚动到确认卡并聚焦 Composer | 展开宽 360px、只露 3 摘要并显示更多数量；快捷键不抢 Composer 焦点；不遮挡发送按钮/当前确认卡 | `python -m pytest tests/e2e/test_task_dock_layout.py -q` | `artifacts/acceptance/M2/M2-E-008.zip` |
 | M2-E-009 | e2e/keyboard | Composer 未聚焦；另备普通输入框、contenteditable 和输入法 composition 场景 | 在非输入控件焦点按 `/`；分别在已有输入控件焦点及 composition 中按 `/` | 仅第一种聚焦 Composer 且不插入 `/`；已有输入焦点和 composition 均不被抢占，原输入保持 | `python -m pytest tests/e2e/test_conversation_keyboard.py::test_slash_focuses_composer_only_outside_editable_or_ime -q` | `artifacts/acceptance/M2/M2-E-009.zip` |
 | M2-E-010 | e2e/keyboard | Composer 含未提交文本；覆盖 Windows/Linux Control 与 macOS Meta；输入法可控 | 按 `Ctrl/Cmd+Enter`；在 composition 中按同键并结束 composition | 正常场景恰发送一次并形成 `USER_DRAFT`；composition 中零发送，结束后必须再次按键才发送 | `python -m pytest tests/e2e/test_conversation_keyboard.py::test_ctrl_or_cmd_enter_sends_once_outside_ime -q` | `artifacts/acceptance/M2/M2-E-010.zip` |
@@ -67,7 +67,7 @@
 |---|---|---|---|---|
 | `m2-expert-conversation-workspace` | 1.0.0 | PLANNED / NOT_VERIFIED | 固定 ENGINEER A/B、ADMIN、深圳 HDI 项目、八阶段消息、首个未完成问题和 Composer 草稿；基于批准 PRD/Spec | 文件尚不存在，不声明 checksum、签名或验证结果 |
 | `m2-process-validation` | 1.0.0 | PLANNED / NOT_VERIFIED | HDI 固定工艺链、填孔电镀覆盖、0/2/3/>3% 面积边界、规则来源 | 专家未签认的规则保持 `UNVERIFIED`，软件测试不升级为 `EXPERT_VERIFIED` |
-| `m2-task-polling-faults` | 1.0.0 | PLANNED / NOT_VERIFIED | 同一 task id 的活动/终态、401/403/404、网络中断、过期游标和轮询时钟 | 不依赖真实 Provider、外网、生产账号或非确定当前时间 |
+| `m2-task-polling-faults` | 1.0.0 | PLANNED / NOT_VERIFIED | 同一 task id 的活动/终态、401/scoped 404、网络中断、过期游标和轮询时钟 | 不依赖真实 Provider、外网、生产账号或非确定当前时间 |
 | `m2-four-theme-golden` | 1.0.0 | PLANNED / NOT_VERIFIED | 中/英 × 明/暗；Chromium/DPR 1；1440x900 与 1280x720；固定字体、截图区域、mask、主流程及错误恢复截图 | 仅在固定环境生成、checksum 匹配并由独立 Visual Reviewer 批准后从 `NOT_VERIFIED` 升级；阈值 pixel diff `<=0.2%`、关键控件 bbox 偏移 `<=2px` |
 
 计划 manifest 路径为 `fixtures/acceptance/M2/expert-conversation-workspace/1.0.0/manifest.json`。只有 fixture 文件实际创建、manifest schema 与 checksum 通过、producer 和独立 verifier 不同、验证记录存在且对应测试通过后，才可升级为 `SOFTWARE_VERIFIED`；领域规则还需独立专家签认才能标记 `EXPERT_VERIFIED`。
