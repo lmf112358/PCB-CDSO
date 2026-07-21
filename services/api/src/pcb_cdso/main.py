@@ -6,12 +6,14 @@ from fastapi import FastAPI
 from redis import Redis
 
 from pcb_cdso.core.config import Settings, get_settings
-from pcb_cdso.db.session import build_engine, probe_database
+from pcb_cdso.db.session import build_engine, build_session_factory, probe_database
+from sqlalchemy.orm import Session, sessionmaker
 from pcb_cdso.db.session import build_session_factory
 from pcb_cdso.domain.projects import ProjectService
 from pcb_cdso.http.auth import AuthService, build_auth_router, build_get_actor
 from pcb_cdso.http.errors import ApiError, api_error_handler, unexpected_error_handler
 from pcb_cdso.http.projects import build_projects_router
+from pcb_cdso.http.tasks_m1 import build_tasks_m1_router
 from pcb_cdso.http.health import build_health_router
 from pcb_cdso.http.request_id import RequestIdMiddleware
 from pcb_cdso.http.tasks import (
@@ -38,6 +40,7 @@ def create_app(
     task_dispatcher: TaskDispatcher | None = None,
     auth_service: AuthService | None = None,
     project_service: ProjectService | None = None,
+    tasks_session_factory: sessionmaker[Session] | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     engine = build_engine(resolved_settings)
@@ -75,6 +78,12 @@ def create_app(
     app.include_router(
         build_projects_router(
             resolved_project_service,
+            build_get_actor(resolved_auth_service),
+        )
+    )
+    app.include_router(
+        build_tasks_m1_router(
+            tasks_session_factory or build_session_factory(engine),
             build_get_actor(resolved_auth_service),
         )
     )
