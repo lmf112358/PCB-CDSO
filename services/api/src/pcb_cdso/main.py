@@ -7,6 +7,8 @@ from redis import Redis
 
 from pcb_cdso.core.config import Settings, get_settings
 from pcb_cdso.db.session import build_engine, probe_database
+from pcb_cdso.db.session import build_session_factory
+from pcb_cdso.http.auth import AuthService, build_auth_router, build_get_actor
 from pcb_cdso.http.errors import ApiError, api_error_handler, unexpected_error_handler
 from pcb_cdso.http.health import build_health_router
 from pcb_cdso.http.request_id import RequestIdMiddleware
@@ -32,6 +34,7 @@ def create_app(
     redis_probe: Probe | None = None,
     idempotency_store: IdempotencyStore | None = None,
     task_dispatcher: TaskDispatcher | None = None,
+    auth_service: AuthService | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     engine = build_engine(resolved_settings)
@@ -49,6 +52,18 @@ def create_app(
             resolved_settings,
             db_probe or (lambda: probe_database(engine)),
             redis_probe or (lambda: bool(redis_client.ping())),
+        )
+    )
+    # Auth router is always enabled (ADR-0002). In tests, an in-memory
+    # session_factory-backed AuthService can be injected; in production it
+    # binds to the real MySQL session factory built from the engine.
+    resolved_auth_service = auth_service or AuthService(
+        build_session_factory(engine)
+    )
+    app.include_router(
+        build_auth_router(
+            resolved_auth_service,
+            build_get_actor(resolved_auth_service),
         )
     )
     if resolved_settings.environment != "production":

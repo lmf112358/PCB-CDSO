@@ -260,6 +260,15 @@
         "title": "LiveHealth",
         "type": "object"
       },
+      "Locale": {
+        "description": "Account locale preference (PRD section 11: saved to account, restored on next login).",
+        "enum": [
+          "zh-CN",
+          "en-US"
+        ],
+        "title": "Locale",
+        "type": "string"
+      },
       "LoginRequest": {
         "additionalProperties": false,
         "properties": {
@@ -472,6 +481,15 @@
         "title": "TaskList",
         "type": "object"
       },
+      "Theme": {
+        "description": "Account theme preference (PRD section 11).",
+        "enum": [
+          "light",
+          "dark"
+        ],
+        "title": "Theme",
+        "type": "string"
+      },
       "User": {
         "additionalProperties": false,
         "properties": {
@@ -507,6 +525,15 @@
         ],
         "title": "User",
         "type": "object"
+      },
+      "UserRole": {
+        "description": "PCB-CDSO account role (PRD section 3.1: only ADMIN and ENGINEER).",
+        "enum": [
+          "ADMIN",
+          "ENGINEER"
+        ],
+        "title": "UserRole",
+        "type": "string"
       },
       "ValidationError": {
         "properties": {
