@@ -93,9 +93,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def load_pr_context(body_env: str, head_sha_env: str) -> tuple[str, str]:
     body = os.environ.get(body_env, "")
     head_sha = os.environ.get(head_sha_env, "")
-    if body and head_sha:
-        return body, head_sha
-
     event_path = os.environ.get("GITHUB_EVENT_PATH", "")
     if not event_path:
         return body, head_sha
@@ -110,8 +107,8 @@ def load_pr_context(body_env: str, head_sha_env: str) -> tuple[str, str]:
     event_body = pull_request.get("body")
     event_head = pull_request.get("head", {})
     event_sha = event_head.get("sha") if isinstance(event_head, dict) else None
-    return body or (event_body if isinstance(event_body, str) else ""), head_sha or (
-        event_sha if isinstance(event_sha, str) else ""
+    return (event_body if isinstance(event_body, str) else body), (
+        event_sha if isinstance(event_sha, str) else head_sha
     )
 
 

@@ -54,8 +54,8 @@ class PullRequestBodyTest(unittest.TestCase):
                 encoding="utf-8",
             )
             environment = {
-                "PR_BODY": "",
-                "PR_HEAD_SHA": "",
+                "PR_BODY": "stale environment body",
+                "PR_HEAD_SHA": "a" * 40,
                 "GITHUB_EVENT_PATH": str(event_path),
             }
             with patch.dict(os.environ, environment, clear=False):
