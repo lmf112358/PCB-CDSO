@@ -3,13 +3,25 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from fastapi import FastAPI
+from redis import Redis
 
 from pcb_cdso.core.config import Settings, get_settings
 from pcb_cdso.http.errors import ApiError, api_error_handler, unexpected_error_handler
 from pcb_cdso.http.health import build_health_router
 from pcb_cdso.http.request_id import RequestIdMiddleware
+from pcb_cdso.http.tasks import (
+    IdempotencyStore,
+    RedisIdempotencyStore,
+    TaskDispatcher,
+    build_task_router,
+)
+from pcb_cdso.tasks.smoke import smoke
 
 Probe = Callable[[], bool]
+
+
+def dispatch_smoke(task_id: str, request_id: str) -> None:
+    smoke.apply_async(args=[request_id], task_id=task_id)
 
 
 def create_app(
@@ -17,6 +29,8 @@ def create_app(
     settings: Settings | None = None,
     db_probe: Probe | None = None,
     redis_probe: Probe | None = None,
+    idempotency_store: IdempotencyStore | None = None,
+    task_dispatcher: TaskDispatcher | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     app = FastAPI(
@@ -34,6 +48,11 @@ def create_app(
             redis_probe or (lambda: False),
         )
     )
+    if resolved_settings.environment != "production":
+        resolved_store = idempotency_store or RedisIdempotencyStore(
+            Redis.from_url(resolved_settings.redis_url)
+        )
+        app.include_router(build_task_router(resolved_store, task_dispatcher or dispatch_smoke))
     return app
 
 
