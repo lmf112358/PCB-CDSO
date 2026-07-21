@@ -3,6 +3,19 @@ description: A reproducible deviation from an approved specification
 title: "[Bug]: "
 labels: ["type:bug", "status:triage"]
 body:
+  - type: dropdown
+    id: role
+    attributes:
+      label: Assigned agent role
+      options:
+        - Spec
+        - Contract
+        - Implementer
+        - Test
+        - Reviewer
+        - Acceptance
+    validations:
+      required: true
   - type: input
     id: spec
     attributes:
@@ -15,6 +28,13 @@ body:
     attributes:
       label: Base SHA
       description: Full 40-character SHA of the reproduced defect.
+    validations:
+      required: true
+  - type: textarea
+    id: checkout
+    attributes:
+      label: Branch and worktree or read-only ref
+      description: Writers provide branch plus absolute worktree; Reviewer/Acceptance provide exact PR ref, candidate SHA, tag, or clean main.
     validations:
       required: true
   - type: textarea
@@ -41,6 +61,20 @@ body:
     attributes:
       label: Allowed paths and active file lease
       description: Repository-relative POSIX paths, owner, acquired time, and expiry.
+    validations:
+      required: true
+  - type: textarea
+    id: forbidden_paths
+    attributes:
+      label: Forbidden paths
+      description: Explicit out-of-scope paths; write none only when the task package truly has no additional restriction.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and merged contract versions
+      description: Upstream Issues/PRs, approved specs, OpenAPI/Schema/seed versions, or none.
     validations:
       required: true
   - type: textarea

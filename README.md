@@ -40,6 +40,8 @@ make acceptance MILESTONE=M0
 | `make verify` | 本地提交前的默认质量门禁 |
 | `make acceptance MILESTONE=M0` | 检查指定 M0-M6 阶段的 Test Plan、验收记录和证据是否齐备 |
 
+GitHub PR 还会运行 `pull-request-evidence`，要求 Implementer、Spec Reviewer、Code Quality Reviewer 为独立身份，两个审查结论均为 `APPROVE` 且绑定 40 位 Reviewed SHA；阶段候选还必须填写 Candidate SHA 和 Acceptance Record 路径。
+
 ## Git 工作方式
 
 - `main` 只通过 Pull Request 合并。

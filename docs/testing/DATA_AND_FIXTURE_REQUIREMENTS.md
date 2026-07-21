@@ -167,7 +167,7 @@ fixtures/
 ## 9. 数据进入阶段的门禁
 
 1. Owner 创建 manifest 和数据。
-2. Schema、编码、范围、唯一性和 checksum 自动检查。
+2. 通过仓库内 Draft 2020-12 子集校验器执行 manifest schema，并自动检查编码、范围、唯一性和 checksum；schema 自身缺少核心声明时直接阻断。
 3. Test Agent 运行正反例。
 4. 对计算数据核对中间值和聚合守恒。
 5. Reviewer 检查来源、单位、许可和敏感信息。

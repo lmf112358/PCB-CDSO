@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -104,6 +105,79 @@ def _required_string(container: dict[str, Any], key: str, label: str, errors: li
         errors.append(f"{label} requires non-empty {key}")
 
 
+def check_schema_contract(path: Path, root: Path, schema: Any) -> list[str]:
+    label = relative(path, root)
+    if not isinstance(schema, dict):
+        return [f"invalid manifest schema: {label} must be an object"]
+    required_keys = {"$schema", "$id", "type", "required", "properties"}
+    missing = sorted(required_keys - set(schema))
+    if missing or schema.get("type") != "object" or not isinstance(schema.get("required"), list) or not isinstance(schema.get("properties"), dict):
+        detail = f" missing {', '.join(missing)}" if missing else ""
+        return [f"invalid manifest schema: {label}{detail}"]
+    return []
+
+
+def validate_schema(instance: Any, schema: dict[str, Any], location: str) -> list[str]:
+    """Validate the JSON Schema subset used by the two repository manifests."""
+    errors: list[str] = []
+    expected_type = schema.get("type")
+    allowed_types = expected_type if isinstance(expected_type, list) else [expected_type]
+    type_checks = {
+        "object": lambda value: isinstance(value, dict),
+        "array": lambda value: isinstance(value, list),
+        "string": lambda value: isinstance(value, str),
+        "null": lambda value: value is None,
+        "number": lambda value: isinstance(value, (int, float)) and not isinstance(value, bool),
+        "integer": lambda value: isinstance(value, int) and not isinstance(value, bool),
+        "boolean": lambda value: isinstance(value, bool),
+    }
+    declared_types = [item for item in allowed_types if item]
+    if declared_types and not any(type_checks[item](instance) for item in declared_types if item in type_checks):
+        return [f"{location} must be type {'/'.join(declared_types)}"]
+    if "const" in schema and instance != schema["const"]:
+        errors.append(f"{location} must equal {schema['const']!r}")
+    if "enum" in schema and instance not in schema["enum"]:
+        errors.append(f"{location} is not an allowed value")
+    if isinstance(instance, str):
+        if len(instance) < schema.get("minLength", 0):
+            errors.append(f"{location} is too short")
+        if "pattern" in schema and not re.fullmatch(schema["pattern"], instance):
+            errors.append(f"{location} does not match required pattern")
+        if schema.get("format") == "date-time" and not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})", instance):
+            errors.append(f"{location} is not an ISO 8601 date-time")
+    if isinstance(instance, dict):
+        required = schema.get("required", [])
+        for key in required:
+            if key not in instance:
+                errors.append(f"{location} missing {key}")
+        properties = schema.get("properties", {})
+        if schema.get("additionalProperties") is False:
+            for key in instance:
+                if key not in properties:
+                    errors.append(f"{location} has unexpected property {key}")
+        for key, child_schema in properties.items():
+            if key in instance:
+                errors.extend(validate_schema(instance[key], child_schema, f"{location}.{key}"))
+        if len(instance) < schema.get("minProperties", 0):
+            errors.append(f"{location} has too few properties")
+    if isinstance(instance, list):
+        if len(instance) < schema.get("minItems", 0):
+            errors.append(f"{location} has too few items")
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for index, item in enumerate(instance):
+                errors.extend(validate_schema(item, item_schema, f"{location}[{index}]"))
+        contains = schema.get("contains")
+        if isinstance(contains, dict) and not any(not validate_schema(item, contains, location) for item in instance):
+            errors.append(f"{location} has no item matching contains")
+    for conditional in schema.get("allOf", []):
+        if_schema = conditional.get("if")
+        then_schema = conditional.get("then")
+        if isinstance(if_schema, dict) and isinstance(then_schema, dict) and not validate_schema(instance, if_schema, location):
+            errors.extend(validate_schema(instance, then_schema, location))
+    return errors
+
+
 def check_manifest(path: Path, root: Path, data: Any) -> list[str]:
     errors: list[str] = []
     label = relative(path, root)
@@ -121,6 +195,8 @@ def check_manifest(path: Path, root: Path, data: Any) -> list[str]:
     else:
         _required_string(governance, "producer", label, errors)
         _required_string(governance, "softwareVerifier", label, errors)
+        if governance.get("producer") and governance.get("producer") == governance.get("softwareVerifier"):
+            errors.append(f"{label} producer and softwareVerifier must be independent")
         if "expertApprover" not in governance:
             errors.append(f"{label} missing expertApprover")
     evidence = data.get("verificationEvidence")
@@ -133,6 +209,15 @@ def check_manifest(path: Path, root: Path, data: Any) -> list[str]:
             continue
         for key in ("status", "verifiedBy", "verifiedAt", "method", "signedRecordPath"):
             _required_string(item, key, f"{label} verificationEvidence[{index}]", errors)
+        record_path = item.get("signedRecordPath")
+        if isinstance(record_path, str):
+            candidate = Path(record_path)
+            if candidate.is_absolute() or ".." in candidate.parts or not (root / candidate).is_file():
+                errors.append(f"{label} verificationEvidence[{index}] signedRecordPath is missing or unsafe")
+    if status == "SOFTWARE_VERIFIED" and not any(
+        isinstance(item, dict) and item.get("status") == "SOFTWARE_VERIFIED" for item in evidence
+    ):
+        errors.append(f"{label} SOFTWARE_VERIFIED requires software verification evidence")
     if status == "EXPERT_VERIFIED" and not any(
         isinstance(item, dict) and item.get("status") == "EXPERT_VERIFIED" for item in evidence
     ):
@@ -184,6 +269,23 @@ def check_acceptance(root: Path, milestone: str) -> list[str]:
     if not record.is_file() or record.stat().st_size == 0:
         errors.append(f"acceptance requires non-empty acceptance record: {relative(record, root)}")
         return errors
+    plan_text = plan.read_text(encoding="utf-8") if plan.is_file() else ""
+    if not re.search(r"\|\s*状态\s*\|\s*approved\s*\|", plan_text, re.IGNORECASE):
+        errors.append(f"{relative(plan, root)} test plan status must be approved")
+    trace_text = (root / "docs/testing/P0_TRACEABILITY.md").read_text(encoding="utf-8")
+    required_ids = [
+        p0_id
+        for p0_id, primary in re.findall(
+            r"^\|\s*(P0_\d{2})\s*\|.*\|\s*(M[0-6])\s*\|",
+            trace_text,
+            re.MULTILINE,
+        )
+        if primary == milestone
+    ]
+    for p0_id in required_ids:
+        if not re.search(rf"^\|\s*{re.escape(p0_id)}\s*\|", plan_text, re.MULTILINE):
+            errors.append(f"{relative(plan, root)} missing required {p0_id}")
+
     text = record.read_text(encoding="utf-8")
     status_match = re.search(r"\|\s*状态\s*\|\s*([^|]+?)\s*\|", text)
     if not status_match or status_match.group(1).strip() != "GO":
@@ -192,6 +294,19 @@ def check_acceptance(root: Path, milestone: str) -> list[str]:
     candidate_sha = sha_match.group(1).strip() if sha_match else ""
     if not SHA_PATTERN.fullmatch(candidate_sha):
         errors.append(f"{relative(record, root)} requires a 40-character Candidate SHA")
+    elif (root / ".git").exists():
+        exists = subprocess.run(
+            ["git", "cat-file", "-e", f"{candidate_sha}^{{commit}}"],
+            cwd=root,
+            capture_output=True,
+            check=False,
+        )
+        if exists.returncode != 0:
+            errors.append(f"{relative(record, root)} Candidate SHA is not a repository commit")
+    signoff_match = re.search(r"\|\s*Product Sign-off\s*\|\s*([^|]+?)\s*\|", text, re.IGNORECASE)
+    signoff = signoff_match.group(1).strip() if signoff_match else ""
+    if not signoff or signoff.lower() in {"pending", "not_required", "not-required"}:
+        errors.append(f"{relative(record, root)} requires Product Sign-off")
     evidence_paths: list[str] = []
     for line in text.splitlines():
         if not line.startswith("|") or "pass" not in line.lower():
@@ -199,12 +314,17 @@ def check_acceptance(root: Path, milestone: str) -> list[str]:
         cells = [cell.strip() for cell in line.strip("|").split("|")]
         if len(cells) >= 6 and cells[-1].lower() == "pass":
             evidence_paths.append(cells[-2].strip("`"))
+        elif len(cells) >= 6 and cells[-1].lower() == "fail":
+            errors.append(f"{relative(record, root)} contains failing required evidence")
     if not evidence_paths:
         errors.append(f"{relative(record, root)} requires at least one passing evidence row")
     for evidence_path in evidence_paths:
         candidate = Path(evidence_path)
         if candidate.is_absolute() or ".." in candidate.parts or not (root / candidate).is_file():
             errors.append(f"{relative(record, root)} evidence path missing or unsafe: {evidence_path}")
+    for p0_id in required_ids:
+        if not any(p0_id in line and line.rstrip().lower().endswith("pass |") for line in text.splitlines()):
+            errors.append(f"{relative(record, root)} missing passing evidence for {p0_id}")
     return errors
 
 
@@ -241,8 +361,19 @@ def check_repository(root: Path, acceptance_ready: str | None = None) -> list[st
                     errors.append(f"unfinished marker {label!r} in approved document: {relative(path, root)}")
 
     errors.extend(check_p0_traceability(root, decoded))
+    schema_paths = {
+        "seed": root / "contracts/seeds/seed-manifest.schema.json",
+        "fixture": root / "contracts/fixtures/fixture-manifest.schema.json",
+    }
+    for schema_path in schema_paths.values():
+        if schema_path in parsed_json:
+            errors.extend(check_schema_contract(schema_path, root, parsed_json[schema_path]))
     for path, data in parsed_json.items():
         if path.name == "manifest.json" and ("fixtures" in path.parts or "seeds" in path.parts):
+            schema_key = "fixture" if "fixtures" in path.parts else "seed"
+            schema = parsed_json.get(schema_paths[schema_key])
+            if isinstance(schema, dict):
+                errors.extend(validate_schema(data, schema, relative(path, root)))
             errors.extend(check_manifest(path, root, data))
     if acceptance_ready:
         errors.extend(check_acceptance(root, acceptance_ready))

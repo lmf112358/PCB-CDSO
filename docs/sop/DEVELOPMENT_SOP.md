@@ -142,7 +142,7 @@ git push origin --tags
 - 至少 1 个批准；影响公式、权限、迁移或契约时必须有对应 CODEOWNER。
 - Dismiss stale approvals when new commits are pushed。
 - Require review from Code Owners。
-- Require status checks：`governance`、`unit`，M0 后加入 `lint`、`typecheck`、`contract`、`integration`、`e2e-critical`、`build`。
+- Require status checks：`governance`、`unit`、`pull-request-evidence`，M0 后加入 `lint`、`typecheck`、`contract`、`integration`、`e2e-critical`、`build`。
 - Require branches to be up to date before merging。
 - Require conversation resolution。
 - Block force pushes and deletions。
@@ -477,7 +477,7 @@ trial-v0.6.0
 
 验收状态统一使用 `draft / GO / NO-GO / CONDITIONAL-GO / EXPIRED`。安全、越权、数据完整性、不可恢复迁移、Milestone 停止条件、required test 失败或必需签字缺失一律 NO-GO；CONDITIONAL-GO 只允许不影响主链和数据正确性的非阻断偏差，并必须有 Owner、Issue、到期日、复验命令和失败处置，过期自动转 EXPIRED 并按 NO-GO 处理。
 
-阶段验收统一运行 `make acceptance MILESTONE=M0`。标准输入路径为 `docs/testing/plans/M0-test-plan.md` 和 `docs/testing/acceptance/M0-acceptance.md`，M1-M6 依此命名。进入 acceptance-ready 必须是 `GO`，记录 40 位 Candidate SHA，至少包含一行通过证据，且每个证据路径在当前工作区真实存在。
+阶段验收统一运行 `make acceptance MILESTONE=M0`。标准输入路径为 `docs/testing/plans/M0-test-plan.md` 和 `docs/testing/acceptance/M0-acceptance.md`，M1-M6 依此命名。进入 acceptance-ready 必须具备 approved Test Plan，覆盖该阶段全部 Primary P0；Acceptance Record 必须是 `GO`，记录仓库中真实存在的 40 位 Candidate SHA、Product Sign-off，并为每条 Primary P0 提供通过证据，且每个证据路径在当前工作区真实存在。
 
 ## 14. 常见失败与处理
 

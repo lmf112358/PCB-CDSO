@@ -46,14 +46,16 @@ def write(path: Path, content: str) -> None:
 
 def make_valid_repository(root: Path, include_milestones: bool = True) -> None:
     p0_lines = "\n".join(f"- P0_{index:02d}" for index in range(1, 15))
+    primary_milestones = ("M0", "M1", "M1", "M2", "M2", "M2", "M4", "M3", "M4", "M5", "M5", "M5", "M1", "M6")
     trace_rows = "\n".join(
-        f"| P0_{index:02d} | requirement | M{min((index - 1) // 2, 6)} | spec.md | evidence |"
+        f"| P0_{index:02d} | requirement | {primary_milestones[index - 1]} | spec.md | evidence |"
         for index in range(1, 15)
     )
     for relative in REQUIRED_FILES:
         path = root / relative
         if path.suffix == ".json":
-            write(path, json.dumps({"valid": True}))
+            source = PROJECT_ROOT / relative
+            write(path, source.read_text(encoding="utf-8"))
         elif relative == "docs/sop/DEVELOPMENT_SOP.md":
             write(path, "# SOP\n\n| 状态 | approved |\n")
         elif relative == "docs/product/PRD_v0.6.md":
@@ -74,11 +76,12 @@ def make_valid_repository(root: Path, include_milestones: bool = True) -> None:
 
 
 def make_acceptance_artifacts(root: Path, milestone: str = "M0") -> None:
+    requirement = "P0_14" if milestone == "M6" else "P0_01"
     evidence = root / "artifacts" / "acceptance" / milestone / "governance.txt"
     write(evidence, "all checks passed\n")
     write(
         root / "docs" / "testing" / "plans" / f"{milestone}-test-plan.md",
-        f"# {milestone} Test Plan\n\n| Requirement ID | Command | Expected |\n|---|---|---|\n| P0_01 | make test | exit 0 |\n",
+        f"# {milestone} Test Plan\n\n| 状态 | approved |\n\n| Requirement ID | Command | Expected |\n|---|---|---|\n| {requirement} | make test | exit 0 |\n",
     )
     write(
         root / "docs" / "testing" / "acceptance" / f"{milestone}-acceptance.md",
@@ -96,7 +99,7 @@ def make_acceptance_artifacts(root: Path, milestone: str = "M0") -> None:
                 "",
                 "| 场景/命令 | 预期 | 实际 | 退出码 | 证据路径 | 结论 |",
                 "|---|---|---|---:|---|---|",
-                f"| governance | exit 0 | exit 0 | 0 | artifacts/acceptance/{milestone}/governance.txt | pass |",
+                f"| {requirement} governance | exit 0 | exit 0 | 0 | artifacts/acceptance/{milestone}/governance.txt | pass |",
             )
         ),
     )
@@ -109,6 +112,7 @@ def make_fixture_manifest(root: Path, checksum_matches: bool = True) -> Path:
     if not checksum_matches:
         checksum = "0" * 64
     manifest_path = data_path.with_name("manifest.json")
+    write(root / "docs" / "testing" / "acceptance" / "M3-acceptance.md", "signed software verification\n")
     manifest = {
         "schemaVersion": "1.0.0",
         "datasetId": "case-1",
@@ -207,6 +211,19 @@ class GovernanceCheckerTest(unittest.TestCase):
             self.assertEqual(1, result.returncode)
             self.assertIn(MILESTONES[6], result.stdout)
 
+    def test_acceptance_ready_requires_milestone_argument(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            make_valid_repository(root)
+            result = subprocess.run(
+                [sys.executable, str(CHECKER), "--root", str(root), "--acceptance-ready"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(2, result.returncode)
+            self.assertIn("expected one argument", result.stderr)
+
     def test_acceptance_ready_rejects_empty_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -230,6 +247,24 @@ class GovernanceCheckerTest(unittest.TestCase):
             self.assertIn("GO", result.stdout)
             self.assertIn("40-character", result.stdout)
             self.assertIn("evidence", result.stdout)
+
+    def test_acceptance_ready_requires_approved_plan_requirement_and_signoff(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            make_valid_repository(root)
+            make_acceptance_artifacts(root)
+            plan = root / "docs" / "testing" / "plans" / "M0-test-plan.md"
+            write(plan, "# M0 Test Plan\n\n| Requirement ID | Command | Expected |\n|---|---|---|\n| OTHER | test | pass |\n")
+            record = root / "docs" / "testing" / "acceptance" / "M0-acceptance.md"
+            text = record.read_text(encoding="utf-8").replace(
+                "product-owner@2026-07-21T12:00:00+08:00", ""
+            )
+            write(record, text)
+            result = run_checker(root, "M0")
+            self.assertEqual(1, result.returncode)
+            self.assertIn("approved", result.stdout)
+            self.assertIn("P0_01", result.stdout)
+            self.assertIn("Product Sign-off", result.stdout)
 
     def test_acceptance_ready_passes_with_plan_record_and_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -260,6 +295,39 @@ class GovernanceCheckerTest(unittest.TestCase):
             result = run_checker(root)
             self.assertEqual(1, result.returncode)
             self.assertIn("softwareVerifier", result.stdout)
+
+    def test_fixture_manifest_rejects_same_producer_and_verifier(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            make_valid_repository(root)
+            manifest_path = make_fixture_manifest(root)
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["governance"]["softwareVerifier"] = manifest["governance"]["producer"]
+            write(manifest_path, json.dumps(manifest))
+            result = run_checker(root)
+            self.assertEqual(1, result.returncode)
+            self.assertIn("independent", result.stdout)
+
+    def test_fixture_manifest_verification_record_must_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            make_valid_repository(root)
+            manifest_path = make_fixture_manifest(root)
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["verificationEvidence"][0]["signedRecordPath"] = "missing-record.md"
+            write(manifest_path, json.dumps(manifest))
+            result = run_checker(root)
+            self.assertEqual(1, result.returncode)
+            self.assertIn("signedRecordPath", result.stdout)
+
+    def test_invalid_manifest_schema_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            make_valid_repository(root)
+            write(root / "contracts" / "fixtures" / "fixture-manifest.schema.json", '{"valid": true}')
+            result = run_checker(root)
+            self.assertEqual(1, result.returncode)
+            self.assertIn("invalid manifest schema", result.stdout)
 
 
 if __name__ == "__main__":
