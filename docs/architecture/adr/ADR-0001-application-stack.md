@@ -38,6 +38,8 @@ PCB-CDSO v0.6 由两个全栈开发者在 1.5 周内交付桌面 Web 试开发�
 
 API 数据访问使用 SQLAlchemy 2.0 同步 Session，每请求/每任务一个 Session。Celery 使用 Redis 作为 broker 和试开发 result backend；业务结果写入 MySQL。前端使用 npm workspaces，不引入第二套包管理器。
 
+Python Redis client 锁定 `redis-py 6.4.0`。Celery 5.6.3 的 Kombu Redis transport 要求 `redis-py < 6.5`；Redis Server 版本仍为 7.4，两者版本号不要求一致。
+
 ## 驱动与安全选择
 
 - MySQL DBAPI 使用 PyMySQL，减少本地编译依赖。
@@ -60,4 +62,3 @@ API 数据访问使用 SQLAlchemy 2.0 同步 Session，每请求/每任务一个
 ## 版本来源与复核
 
 2026-07-21 通过 npm registry 与 PyPI 查询应用依赖可用版本；FastAPI、Celery、SQLAlchemy 的架构用法由其官方文档复核。Context7 因月度额度耗尽未能返回文档。版本在生成锁文件和容器构建时再次验证；不存在或不兼容即停止实现并修订本 ADR，不静默替换。
-

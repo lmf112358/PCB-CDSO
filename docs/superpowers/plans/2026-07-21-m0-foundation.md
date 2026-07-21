@@ -6,7 +6,7 @@
 
 **Architecture:** A React/Vite SPA calls a modular FastAPI application. SQLAlchemy/Alembic own MySQL state; Celery uses Redis for transport and writes durable facts to MySQL. Docker Compose controls dependency health and one-shot migration/bootstrap jobs.
 
-**Tech Stack:** Python 3.12, FastAPI 0.139.2, SQLAlchemy 2.0.51, Alembic 1.18.5, Celery 5.6.3, MySQL 8.4, Redis 7.4, Node 22, React 19.2.7, Vite 8.1.5, TypeScript 7.0.2, Ant Design 6.5.1, Vitest 4.1.10, Playwright 1.61.1, Docker Compose 2.27+
+**Tech Stack:** Python 3.12, FastAPI 0.139.2, SQLAlchemy 2.0.51, Alembic 1.18.5, Celery 5.6.3, redis-py 6.4.0, MySQL 8.4, Redis Server 7.4, Node 22, React 19.2.7, Vite 8.1.5, TypeScript 7.0.2, Ant Design 6.5.1, Vitest 4.1.10, Playwright 1.61.1, Docker Compose 2.27+
 
 ---
 
@@ -275,4 +275,3 @@ Change each executed Test Plan result from `not_run` to `pass`, reference real e
 - [ ] **Step 5: Run the acceptance gate and commit**
 
 Run `python scripts/quality/check_governance.py --acceptance-ready M0`; expected exit 0. Commit `docs(m0): record foundation acceptance`.
-
