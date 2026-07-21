@@ -1,0 +1,15 @@
+M0 contract and governance evidence
+Candidate SHA: 3591987a59040dcc12a42b73a2a20640151de1f8
+Executed: 2026-07-21 Asia/Shanghai
+
+python scripts/quality/check_governance.py
+Result: Governance baseline valid. Exit 0.
+
+python scripts/quality/check_secrets.py
+Result: PASS no concrete secret assignments found. Exit 0.
+
+python -m unittest discover -s tests -p test_*.py -v
+Result: 30 tests passed, including JSON Schema, OpenAPI drift, acceptance governance and secret scanner tests. Exit 0.
+
+python scripts/quality/generate_openapi.py && git diff --exit-code -- contracts/openapi/openapi.json
+Result: generated contract has no diff. Exit 0.

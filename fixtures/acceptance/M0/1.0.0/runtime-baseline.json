@@ -1,0 +1,10 @@
+{
+  "candidateSha": "3591987a59040dcc12a42b73a2a20640151de1f8",
+  "adminCount": 1,
+  "bootstrapAuditCount": 1,
+  "migrationRevision": "0001_users_audit",
+  "services": ["mysql", "redis", "migrate", "bootstrap-admin", "api", "worker", "web"],
+  "runtimeProbes": {"web": 200, "live": 200, "ready": 200, "openapi": 200},
+  "negativeProbe": {"dependency": "redis", "live": 200, "ready": 503},
+  "celeryCorrelation": "m0-runtime-correlation"
+}

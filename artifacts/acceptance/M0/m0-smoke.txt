@@ -1,0 +1,22 @@
+M0 empty-environment and negative runtime evidence
+Candidate SHA: 3591987a59040dcc12a42b73a2a20640151de1f8
+Executed: 2026-07-21 Asia/Shanghai
+
+docker compose down --volumes --remove-orphans
+docker compose up --wait
+Result: mysql, redis, api, worker and web healthy; migrate and bootstrap-admin exited 0.
+
+python scripts/quality/verify_m0.py
+PASS compose structure
+PASS web: http://localhost:3000/
+PASS live: http://localhost:8000/health/live
+PASS ready: http://localhost:8000/health/ready
+PASS openapi: http://localhost:8000/openapi.json
+
+Restart evidence:
+docker compose restart api worker web, followed by full verifier: all probes passed.
+
+Redis negative evidence:
+- redis stopped: live HTTP 200.
+- redis stopped: ready HTTP 503 with code DEPENDENCY_UNAVAILABLE and redis=unavailable.
+- redis restarted healthy: ready HTTP 200 with database=ready and redis=ready.
