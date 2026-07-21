@@ -24,7 +24,7 @@ def section(body: str, heading: str) -> str:
 
 def field(text: str, label: str) -> str:
     match = re.search(
-        rf"^-[ \t]*{re.escape(label)}[ \t]*[：:][ \t]*([^\r\n]*)$",
+        rf"^-[ \t]*{re.escape(label)}[ \t]*[：:][ \t]*([^\r\n]*)\r?$",
         text,
         re.MULTILINE,
     )
@@ -115,8 +115,6 @@ def load_pr_context(body_env: str, head_sha_env: str) -> tuple[str, str]:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     body, head_sha = load_pr_context(args.body_env, args.head_sha_env)
-    headings = re.findall(r"^##\s+(.+)$", body, re.MULTILINE)
-    print(f"PR metadata loaded: body_chars={len(body)}, headings={headings}, head_sha={head_sha}")
     errors = check_pr_body(body, expected_head_sha=head_sha or None)
     acceptance = section(body, "Acceptance")
     acceptance_status = field(acceptance, "状态")

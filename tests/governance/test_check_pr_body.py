@@ -64,6 +64,9 @@ class PullRequestBodyTest(unittest.TestCase):
     def test_complete_independent_reviews_pass(self) -> None:
         self.assertEqual([], check_pr_body(VALID_BODY))
 
+    def test_complete_independent_reviews_pass_with_crlf(self) -> None:
+        self.assertEqual([], check_pr_body(VALID_BODY.replace("\n", "\r\n")))
+
     def test_missing_review_identity_and_approval_fail(self) -> None:
         body = VALID_BODY.replace("Alice / Codex", "").replace("- 结论：APPROVE", "- 结论：REQUEST-CHANGES", 1)
         errors = check_pr_body(body)
