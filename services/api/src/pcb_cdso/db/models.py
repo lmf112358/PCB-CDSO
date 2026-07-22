@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, func
+from sqlalchemy import JSON, BigInteger, Boolean, DateTime, ForeignKey, String, func
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -361,3 +361,189 @@ class WeatherTaskExecution(Base):
         DateTime(timezone=True), nullable=True
     )
     error_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+
+
+# ===== M2 conversation workspace (migration 0003) =====
+
+
+class Conversation(Base):
+    """Per-project conversation state.
+
+    stage_state JSON holds the 8-stage completion cursor; see
+    ConversationService for shape. One row per project.
+    """
+
+    __tablename__ = "conversations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    project_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    input_revision: Mapped[int] = mapped_column(nullable=False, default=1)
+    stage_state: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class ConversationMessageType(StrEnum):
+    AGENT_PROMPT = "AGENT_PROMPT"
+    USER_DRAFT = "USER_DRAFT"
+    CONFIRMATION_CARD = "CONFIRMATION_CARD"
+    TOOL_CARD = "TOOL_CARD"
+
+
+class ConversationStage(StrEnum):
+    PROJECT_TEMPLATE = "PROJECT_TEMPLATE"
+    GEOGRAPHY_WEATHER = "GEOGRAPHY_WEATHER"
+    BUILDING_FLOOR = "BUILDING_FLOOR"
+    AREA_PROCESS = "AREA_PROCESS"
+    PROCESS_ENVIRONMENT = "PROCESS_ENVIRONMENT"
+    COOLING_INPUT = "COOLING_INPUT"
+    SCHEDULE_STORAGE = "SCHEDULE_STORAGE"
+    REVIEW = "REVIEW"
+
+
+class ConversationMessage(Base):
+    """One of the four messageType records in the timeline.
+
+    sort_cursor is server-issued and monotonic per conversation so replays
+    are deterministic; (conversation_id, sort_cursor) is unique.
+    """
+
+    __tablename__ = "conversation_messages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    conversation_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("conversations.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    project_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    message_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    stage: Mapped[str] = mapped_column(String(32), nullable=False)
+    sort_cursor: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    refers_to_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class ConversationDraft(Base):
+    """USER_DRAFT content saved with CAS draft_version per (project, actor, scope)."""
+
+    __tablename__ = "conversation_drafts"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    project_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    actor_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    scope_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    draft_version: Mapped[int] = mapped_column(nullable=False, default=1)
+    content: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class ConfirmationChallenge(Base):
+    """impact + warning token lifecycle per M2 spec '唯一业务写入路径'."""
+
+    __tablename__ = "confirmation_challenges"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    project_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    conversation_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("conversations.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    actor_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    question_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    canonical_payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    expected_input_revision: Mapped[int] = mapped_column(nullable=False)
+    impact_token_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    warning_codes: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    warning_challenge_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    warning_reasons: Mapped[dict[str, str] | None] = mapped_column(JSON, nullable=True)
+    warning_confirmation_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class ConversationAuditSource(StrEnum):
+    USER_INPUT = "USER_INPUT"
+    TEMPLATE_DEFAULT = "TEMPLATE_DEFAULT"
+    ENGINEER_OVERRIDE = "ENGINEER_OVERRIDE"
+    ADMIN_OVERRIDE = "ADMIN_OVERRIDE"
+
+
+class ConversationAudit(Base):
+    """Immutable per-COMMITTED audit record.
+
+    Records actor, field path, old/new canonical value, unit, rule version,
+    source, warning reasons, before/after revision, request id. Never
+    records tokens, credentials, or unnecessary natural-language content.
+    """
+
+    __tablename__ = "conversation_audits"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    project_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    conversation_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("conversations.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    actor_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    question_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    field_path: Mapped[str] = mapped_column(String(128), nullable=False)
+    old_canonical_value: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    new_canonical_value: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    unit: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    rule_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    source: Mapped[str] = mapped_column(String(32), nullable=False)
+    warning_reasons: Mapped[dict[str, str] | None] = mapped_column(JSON, nullable=True)
+    revision_before: Mapped[int] = mapped_column(nullable=False)
+    revision_after: Mapped[int] = mapped_column(nullable=False)
+    request_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

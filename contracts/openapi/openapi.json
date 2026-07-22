@@ -94,6 +94,189 @@
         "title": "AuthSession",
         "type": "object"
       },
+      "ConfirmRequest": {
+        "properties": {
+          "canonical_payload": {
+            "additionalProperties": true,
+            "title": "Canonical Payload",
+            "type": "object"
+          },
+          "canonical_value": {
+            "title": "Canonical Value"
+          },
+          "challenge_id": {
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "expected_input_revision": {
+            "minimum": 0.0,
+            "title": "Expected Input Revision",
+            "type": "integer"
+          },
+          "field_path": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Field Path",
+            "type": "string"
+          },
+          "impact_token": {
+            "minLength": 16,
+            "title": "Impact Token",
+            "type": "string"
+          },
+          "question_key": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Question Key",
+            "type": "string"
+          },
+          "rule_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Rule Version",
+            "type": "string"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "challenge_id",
+          "impact_token",
+          "expected_input_revision",
+          "canonical_payload",
+          "stage",
+          "question_key",
+          "field_path",
+          "canonical_value",
+          "rule_version"
+        ],
+        "title": "ConfirmRequest",
+        "type": "object"
+      },
+      "ConfirmResponse": {
+        "properties": {
+          "confirmation_message_id": {
+            "title": "Confirmation Message Id",
+            "type": "string"
+          },
+          "new_input_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Input Revision"
+          },
+          "presentation_state": {
+            "title": "Presentation State",
+            "type": "string"
+          },
+          "warning_challenge_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning Challenge Id"
+          }
+        },
+        "required": [
+          "presentation_state",
+          "new_input_revision",
+          "confirmation_message_id",
+          "warning_challenge_id"
+        ],
+        "title": "ConfirmResponse",
+        "type": "object"
+      },
+      "ConversationSnapshotModel": {
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "drafts": {
+            "items": {
+              "$ref": "#/components/schemas/DraftSnapshotModel"
+            },
+            "title": "Drafts",
+            "type": "array"
+          },
+          "first_unfinished_question_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Unfinished Question Key"
+          },
+          "first_unfinished_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Unfinished Stage"
+          },
+          "input_revision": {
+            "title": "Input Revision",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/MessageSnapshotModel"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "stage_state": {
+            "additionalProperties": true,
+            "title": "Stage State",
+            "type": "object"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "project_id",
+          "input_revision",
+          "stage_state",
+          "messages",
+          "drafts",
+          "first_unfinished_stage",
+          "first_unfinished_question_key"
+        ],
+        "title": "ConversationSnapshotModel",
+        "type": "object"
+      },
       "CreateProjectRequest": {
         "additionalProperties": false,
         "description": "CreateProject command body. actorId is intentionally excluded; auth identity is injected from the Authorization header per docs/specs/m1/project-weather-dispatch.md.",
@@ -180,6 +363,40 @@
         "title": "CreateProjectResponse",
         "type": "object"
       },
+      "DraftSnapshotModel": {
+        "properties": {
+          "content": {
+            "additionalProperties": true,
+            "title": "Content",
+            "type": "object"
+          },
+          "draft_version": {
+            "title": "Draft Version",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "scope_key": {
+            "title": "Scope Key",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scope_key",
+          "draft_version",
+          "content",
+          "updated_at"
+        ],
+        "title": "DraftSnapshotModel",
+        "type": "object"
+      },
       "ErrorEnvelope": {
         "properties": {
           "code": {
@@ -230,6 +447,55 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IssueChallengeRequest": {
+        "properties": {
+          "canonical_payload": {
+            "additionalProperties": true,
+            "title": "Canonical Payload",
+            "type": "object"
+          },
+          "question_key": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Question Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_key",
+          "canonical_payload"
+        ],
+        "title": "IssueChallengeRequest",
+        "type": "object"
+      },
+      "IssueChallengeResponse": {
+        "properties": {
+          "challenge_id": {
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "expected_input_revision": {
+            "title": "Expected Input Revision",
+            "type": "integer"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "impact_token": {
+            "title": "Impact Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge_id",
+          "impact_token",
+          "expected_input_revision",
+          "expires_at"
+        ],
+        "title": "IssueChallengeResponse",
         "type": "object"
       },
       "LiveHealth": {
@@ -289,6 +555,56 @@
           "password"
         ],
         "title": "LoginRequest",
+        "type": "object"
+      },
+      "MessageSnapshotModel": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "message_type": {
+            "title": "Message Type",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "refers_to_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refers To Message Id"
+          },
+          "sort_cursor": {
+            "title": "Sort Cursor",
+            "type": "integer"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "message_type",
+          "stage",
+          "sort_cursor",
+          "payload",
+          "created_at"
+        ],
+        "title": "MessageSnapshotModel",
         "type": "object"
       },
       "ProjectSummary": {
@@ -406,6 +722,66 @@
           "refresh_token"
         ],
         "title": "RefreshRequest",
+        "type": "object"
+      },
+      "SaveDraftRequest": {
+        "properties": {
+          "content": {
+            "additionalProperties": true,
+            "title": "Content",
+            "type": "object"
+          },
+          "expected_draft_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Draft Version"
+          },
+          "scope_key": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Scope Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scope_key",
+          "content"
+        ],
+        "title": "SaveDraftRequest",
+        "type": "object"
+      },
+      "SaveDraftResponse": {
+        "properties": {
+          "draft_version": {
+            "title": "Draft Version",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "scope_key": {
+            "title": "Scope Key",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scope_key",
+          "draft_version",
+          "updated_at"
+        ],
+        "title": "SaveDraftResponse",
         "type": "object"
       },
       "TaskEnvelope": {
@@ -1075,6 +1451,378 @@
         "summary": "Create project",
         "tags": [
           "projects"
+        ]
+      }
+    },
+    "/projects/{project_id}/conversation": {
+      "get": {
+        "operationId": "conversation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationSnapshotModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid token."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Project not visible or unknown."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Conversation",
+        "tags": [
+          "conversation"
+        ]
+      }
+    },
+    "/projects/{project_id}/conversation/challenge": {
+      "post": {
+        "operationId": "conversation_issue_challenge",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueChallengeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueChallengeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid token."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Project not visible."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Issue Challenge",
+        "tags": [
+          "conversation"
+        ]
+      }
+    },
+    "/projects/{project_id}/conversation/confirm": {
+      "post": {
+        "operationId": "conversation_confirm",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid token."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Project or challenge not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Token already consumed."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Challenge expired."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm",
+        "tags": [
+          "conversation"
+        ]
+      }
+    },
+    "/projects/{project_id}/conversation/draft": {
+      "post": {
+        "operationId": "conversation_save_draft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveDraftResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Missing or invalid token."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Project not visible."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Draft version conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Draft",
+        "tags": [
+          "conversation"
         ]
       }
     },

@@ -12,6 +12,8 @@ from pcb_cdso.db.session import build_session_factory
 from pcb_cdso.domain.projects import ProjectService
 from pcb_cdso.http.auth import AuthService, build_auth_router, build_get_actor
 from pcb_cdso.http.errors import ApiError, api_error_handler, unexpected_error_handler
+from pcb_cdso.domain.conversation import ConversationService
+from pcb_cdso.http.conversation import build_conversation_router
 from pcb_cdso.http.projects import build_projects_router
 from pcb_cdso.http.tasks_m1 import build_tasks_m1_router
 from pcb_cdso.http.health import build_health_router
@@ -41,6 +43,7 @@ def create_app(
     auth_service: AuthService | None = None,
     project_service: ProjectService | None = None,
     tasks_session_factory: sessionmaker[Session] | None = None,
+    conversation_service: ConversationService | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     engine = build_engine(resolved_settings)
@@ -84,6 +87,16 @@ def create_app(
     app.include_router(
         build_tasks_m1_router(
             tasks_session_factory or build_session_factory(engine),
+            build_get_actor(resolved_auth_service),
+        )
+    )
+    resolved_conversation_service = conversation_service or ConversationService(
+        build_session_factory(engine)
+    )
+    app.include_router(
+        build_conversation_router(
+            build_session_factory(engine),
+            resolved_conversation_service,
             build_get_actor(resolved_auth_service),
         )
     )
