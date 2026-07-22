@@ -17,6 +17,7 @@ import { Alert, Button, Card, Form, Input, Select, Space, Tag, Typography, messa
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Conversation } from './Conversation'
 import {
   ApiError,
   type ActorContext,
@@ -74,6 +75,7 @@ export function Workspace({ actor, onSignOut }: WorkspaceProps) {
   const [tasks, setTasks] = useState<TaskEnvelope[]>([])
   const [tasksLoading, setTasksLoading] = useState(false)
   const [lastCreatedTask, setLastCreatedTask] = useState<TaskEnvelope | null>(null)
+  const [view, setView] = useState<'workspace' | 'conversation'>('workspace')
 
   const refreshTasks = useCallback(async () => {
     setTasksLoading(true)
@@ -147,6 +149,12 @@ export function Workspace({ actor, onSignOut }: WorkspaceProps) {
     onSignOut()
   }
 
+  if (view === 'conversation') {
+    return (
+      <Conversation actor={actor} weatherTask={lastCreatedTask} />
+    )
+  }
+
   return (
     <main className="page-shell">
       <div className="ambient ambient-one" />
@@ -160,6 +168,9 @@ export function Workspace({ actor, onSignOut }: WorkspaceProps) {
           <Text type="secondary">
             {t('welcomeUser')}: {actor.actor_id.slice(0, 8)} · {actor.role}
           </Text>
+          <Button type="primary" onClick={() => setView('conversation')}>
+            {t('workspaceTitle')}
+          </Button>
           <Button type="text" aria-label={t('logout')} icon={<LogoutOutlined />} onClick={() => void handleSignOut()}>
             {t('logout')}
           </Button>
