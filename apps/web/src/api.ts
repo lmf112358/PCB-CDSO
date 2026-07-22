@@ -114,9 +114,14 @@ async function request<T>(
   // Resolve the request URL. When API_BASE is a full URL (e.g. dev proxy
   // or remote backend), use new URL; when it's relative (production same-
   // origin), just concatenate so the browser uses the current origin.
-  const url = API_BASE.startsWith('http')
-    ? new URL(path, API_BASE).toString()
-    : `${API_BASE}${path}`.replace(/\/\+/g, '/')
+  let url: string
+  if (API_BASE.startsWith('http')) {
+    url = new URL(path, API_BASE).toString()
+  } else {
+    const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE
+    const tail = path.startsWith('/') ? path : '/' + path
+    url = base + tail
+  }
   const response = await fetch(url, {
     ...options,
     headers,
