@@ -184,3 +184,111 @@ export async function listTasks(opts: { projectId?: string; activeOnly?: boolean
 export async function getTask(taskId: string): Promise<TaskEnvelope> {
   return request<TaskEnvelope>(`/tasks/${taskId}`)
 }
+
+// --- conversation endpoints (M2) ---
+
+export interface MessageSnapshot {
+  id: string
+  message_type: 'AGENT_PROMPT' | 'USER_DRAFT' | 'CONFIRMATION_CARD' | 'TOOL_CARD'
+  stage: string
+  sort_cursor: number
+  payload: Record<string, unknown>
+  refers_to_message_id: string | null
+  created_at: string
+}
+
+export interface DraftSnapshot {
+  id: string
+  scope_key: string
+  draft_version: number
+  content: Record<string, unknown>
+  updated_at: string
+}
+
+export interface ConversationSnapshot {
+  conversation_id: string
+  project_id: string
+  input_revision: number
+  stage_state: Record<string, string>
+  messages: MessageSnapshot[]
+  drafts: DraftSnapshot[]
+  first_unfinished_stage: string | null
+  first_unfinished_question_key: string | null
+}
+
+export async function getConversation(projectId: string): Promise<ConversationSnapshot> {
+  return request<ConversationSnapshot>(`/projects/${projectId}/conversation`)
+}
+
+export async function saveDraft(
+  projectId: string,
+  scopeKey: string,
+  content: Record<string, unknown>,
+  expectedDraftVersion: number | null,
+): Promise<{ id: string; scope_key: string; draft_version: number; updated_at: string }> {
+  return request(`/projects/${projectId}/conversation/draft`, {
+    method: 'POST',
+    body: JSON.stringify({
+      scope_key: scopeKey,
+      expected_draft_version: expectedDraftVersion,
+      content,
+    }),
+  })
+}
+
+export interface IssueChallengeResponse {
+  challenge_id: string
+  impact_token: string
+  expected_input_revision: number
+  expires_at: string
+}
+
+export async function issueChallenge(
+  projectId: string,
+  questionKey: string,
+  canonicalPayload: Record<string, unknown>,
+): Promise<IssueChallengeResponse> {
+  return request<IssueChallengeResponse>(`/projects/${projectId}/conversation/challenge`, {
+    method: 'POST',
+    body: JSON.stringify({ question_key: questionKey, canonical_payload: canonicalPayload }),
+  })
+}
+
+export interface ConfirmResponse {
+  presentation_state: 'COMMITTED' | 'BLOCKED' | 'WARNING_CONFIRMATION' | 'REVISION_CONFLICT'
+  new_input_revision: number | null
+  confirmation_message_id: string
+  warning_challenge_id: string | null
+}
+
+export async function confirmAnswer(
+  projectId: string,
+  input: {
+    challengeId: string
+    impactToken: string
+    expectedInputRevision: number
+    canonicalPayload: Record<string, unknown>
+    stage: string
+    questionKey: string
+    fieldPath: string
+    canonicalValue: unknown
+    unit: string | null
+    ruleVersion: string
+  },
+): Promise<ConfirmResponse> {
+  return request<ConfirmResponse>(`/projects/${projectId}/conversation/confirm`, {
+    method: 'POST',
+    body: JSON.stringify({
+      challenge_id: input.challengeId,
+      impact_token: input.impactToken,
+      expected_input_revision: input.expectedInputRevision,
+      canonical_payload: input.canonicalPayload,
+      stage: input.stage,
+      question_key: input.questionKey,
+      field_path: input.fieldPath,
+      canonical_value: input.canonicalValue,
+      unit: input.unit,
+      rule_version: input.ruleVersion,
+    }),
+  })
+}

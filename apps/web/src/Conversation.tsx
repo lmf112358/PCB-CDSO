@@ -12,6 +12,7 @@
  * built against a stable front-end shape.
  */
 
+import { getConversation, type ConversationSnapshot } from './api'
 import {
   CheckCircleFilled,
   ClockCircleOutlined,
@@ -21,7 +22,7 @@ import {
   WarningFilled,
 } from '@ant-design/icons'
 import { Input, Tag, Tooltip, Typography } from 'antd'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { ActorContext, TaskEnvelope } from './api'
@@ -33,14 +34,55 @@ const { Text } = Typography
 interface ConversationProps {
   actor: ActorContext
   weatherTask: TaskEnvelope | null
+  projectId: string | null
 }
 
 const STAGE_STATUS = ['done', 'done', 'done', 'active', 'todo', 'todo', 'todo', 'todo'] as const
+const STAGE_KEYS = [
+  'PROJECT_TEMPLATE',
+  'GEOGRAPHY_WEATHER',
+  'BUILDING_FLOOR',
+  'AREA_PROCESS',
+  'PROCESS_ENVIRONMENT',
+  'COOLING_INPUT',
+  'SCHEDULE_STORAGE',
+  'REVIEW',
+] as const
 
-export function Conversation({ actor, weatherTask }: ConversationProps) {
+export function Conversation({ actor, weatherTask, projectId }: ConversationProps) {
   const { t, i18n } = useTranslation()
   const isZh = i18n.language === 'zh-CN'
   const [composer, setComposer] = useState('')
+  const [snapshot, setSnapshot] = useState<ConversationSnapshot | null>(null)
+
+  // When a real project is selected, fetch the conversation snapshot from the
+  // backend. Falls back to the static mock timeline when no project is bound
+  // (e.g. demo without prior project creation).
+  useEffect(() => {
+    if (!projectId) {
+      setSnapshot(null)
+      return
+    }
+    let cancelled = false
+    const load = async () => {
+      try {
+        const data = await getConversation(projectId)
+        if (!cancelled) setSnapshot(data)
+      } catch {
+        if (!cancelled) setSnapshot(null)
+      }
+    }
+    void load()
+    const interval = setInterval(load, 5000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [projectId])
+
+  const realMessages = snapshot?.messages ?? []
+  const stageState = snapshot?.stage_state ?? {}
+  const firstUnfinished = snapshot?.first_unfinished_stage ?? null
 
   return (
     <main className="conv-app" data-theme="dark">
@@ -62,7 +104,16 @@ export function Conversation({ actor, weatherTask }: ConversationProps) {
           <div className="conv-rail-title">{isZh ? '采集阶段' : 'Stages'}</div>
           <ol className="conv-stages">
             {STAGES.map((stage, idx) => {
-              const status = STAGE_STATUS[idx]
+              let status: 'done' | 'active' | 'todo'
+              if (snapshot) {
+                const stageKey = STAGE_KEYS[idx]
+                const state = stageState[stageKey]
+                if (state === 'done') status = 'done'
+                else if (firstUnfinished === stageKey) status = 'active'
+                else status = 'todo'
+              } else {
+                status = STAGE_STATUS[idx]
+              }
               return (
                 <li key={stage.id} className={`conv-stage conv-stage-${status}`}>
                   <span className="conv-stage-num">

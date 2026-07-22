@@ -75,6 +75,7 @@ export function Workspace({ actor, onSignOut }: WorkspaceProps) {
   const [tasks, setTasks] = useState<TaskEnvelope[]>([])
   const [tasksLoading, setTasksLoading] = useState(false)
   const [lastCreatedTask, setLastCreatedTask] = useState<TaskEnvelope | null>(null)
+  const [lastCreatedProjectId, setLastCreatedProjectId] = useState<string | null>(null)
   const [view, setView] = useState<'workspace' | 'conversation'>('workspace')
 
   const refreshTasks = useCallback(async () => {
@@ -119,6 +120,7 @@ export function Workspace({ actor, onSignOut }: WorkspaceProps) {
         idempotencyKey,
       )
       void message.success(t('createSucceeded'))
+      setLastCreatedProjectId(result.project.id)
       setLastCreatedTask({
         task_id: result.weatherTaskId,
         status: 'DISPATCH_PENDING',
@@ -151,7 +153,7 @@ export function Workspace({ actor, onSignOut }: WorkspaceProps) {
 
   if (view === 'conversation') {
     return (
-      <Conversation actor={actor} weatherTask={lastCreatedTask} />
+      <Conversation actor={actor} weatherTask={lastCreatedTask} projectId={lastCreatedProjectId} />
     )
   }
 
